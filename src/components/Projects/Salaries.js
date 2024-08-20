@@ -10,9 +10,9 @@ import {
   MenuItem,
   Divider,
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Pagination from '../../Pagination'; // Assuming Pagination component is in the same folder
+import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
+import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
+import Pagination from '../../Pagination'; 
 
 const demoData = Array(10).fill({
   employeeName: 'Conrad Webber',

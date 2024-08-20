@@ -24,3 +24,11 @@ h5 {
     font-weight: 600 !important;
     font-size: 30px !important;
 }
+
+hr {
+    border-color: #979797 !important;
+}
+
+.add-employee input, .add-employee .MuiSelect-select {
+    padding: 8.5px 14px !important;
+}

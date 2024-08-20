@@ -13,6 +13,7 @@ import OfficeFinance from './components/Ofifce/OfficeFinance';
 import OfficeProgress from './components/Ofifce/OfficeProgress';
 
 import Employees from './components/Projects/Employees';
+import AddNewEmployee from './components/Projects/AddNewEmployee';
 import Vendors from './components/Projects/Vendors';
 import ProjectFinances from './components/Projects/Finances';
 import Inventory from './components/Projects/Inventory';
@@ -46,6 +47,7 @@ const App = () => {
               <Route path="/office-progress" element={<OfficeProgress />} />
 
               <Route path="/employees" element={<Employees />} />
+              <Route path="/add-employee" element={<AddNewEmployee />} />
               <Route path="/vendors" element={<Vendors />} />
               <Route path="/project-finances" element={<ProjectFinances />} />
               <Route path="/project-inventory" element={<Inventory />} />

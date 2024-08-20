@@ -11,11 +11,11 @@ import {
   Divider,
   Button,
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
+import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AddIcon from '@mui/icons-material/Add';
-import Pagination from '../../Pagination'; // Assuming Pagination component is in the same folder
+import Pagination from '../../Pagination'; 
 
 const demoData = Array(10).fill({
   referenceNumber: '258963147',
@@ -70,10 +70,9 @@ const MachineryFinance = () => {
         <Button
           variant="contained"
           color="warning"
-          startIcon={<AddIcon />}
-          sx={{ textTransform: 'none' }}
+          sx={{ textTransform: 'none', backgroundColor: '#FC8908', fontWeight: '400', borderRadius: '8px' }}
         >
-          Create New Project
+          + Create New Project
         </Button>
       </div>
       <Paper elevation={0} className="p-4">

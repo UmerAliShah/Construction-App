@@ -11,9 +11,10 @@ import {
   Divider,
   Button,
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Pagination from '../../Pagination'; // Assuming Pagination component is in the same folder
+import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
+import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
+import Pagination from '../../Pagination';
+import { useNavigate } from 'react-router-dom'; 
 
 const demoData = Array(10).fill({
   name: 'Jacob Swanson',
@@ -26,6 +27,11 @@ const demoData = Array(10).fill({
 const Employees = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate('/add-employee');
+  };
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -61,9 +67,20 @@ const Employees = () => {
 
   return (
     <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        Projects &gt; Employees
-      </Typography>
+        <div className="flex justify-between items-center mb-4">
+        <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+            Projects &gt; Employees
+        </Typography>
+        <Button
+            variant="contained"
+            color="warning"
+            className="mb-4 !bg-[#FC8908]"
+            style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
+            onClick={handleClick}
+        >
+            + Add New Employee
+        </Button>
+      </div>
       <Paper elevation={0} className="p-4">
         <Grid container>
           {/* Table Headings */}
