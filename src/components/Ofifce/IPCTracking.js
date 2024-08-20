@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Box, Checkbox, IconButton, Typography, Grid, Paper, Select, MenuItem, Button, Divider } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Pagination from '../../Pagination'; // Assuming Pagination component is in the same folder
+import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
+import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
+import Pagination from '../../Pagination'; 
+import DescriptionIcon from '@mui/icons-material/Description';
 
 const demoData = Array(10).fill({
   projectName: 'New Site Construction',
@@ -100,9 +101,9 @@ const IPCTracking = () => {
                   <Button
                     variant="text"
                     style={{ color: '#007bff', textTransform: 'none' }}
-                    //startIcon={<img src="document-icon.png" alt="document icon" />}
+                    startIcon={<DescriptionIcon />}
                   >
-                    {/*{row.document}*/}
+                    {row.document}
                   </Button>
                 </Typography>
                 <Box

@@ -11,10 +11,10 @@ import {
   Divider,
   Button,
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
+import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 import DescriptionIcon from '@mui/icons-material/Description';
-import Pagination from '../../Pagination'; // Assuming Pagination component is in the same folder
+import Pagination from '../../Pagination'; 
 
 const demoData = Array(10).fill({
   product: 'Cement',

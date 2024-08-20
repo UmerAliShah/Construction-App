@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Box, Checkbox, IconButton, Typography, Grid, Paper, MenuItem, Select, Divider } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Pagination from '../../Pagination'; // Assuming Pagination component is in the same folder
+import Pagination from '../../Pagination'; 
+import { ReactComponent as EditIcon } from '../Icons/edit.svg';
+import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
+import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 
 const demoData = Array(10).fill({
   department: 'Finance',

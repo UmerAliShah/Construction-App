@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Box, Checkbox, IconButton, Typography, Grid, Paper, Select, MenuItem, Button, LinearProgress, Divider } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Pagination from '../../Pagination'; // Assuming Pagination component is in the same folder
+import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
+import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
+import Pagination from '../../Pagination'; 
+import DescriptionIcon from '@mui/icons-material/Description';
 
 const demoData = Array(10).fill({
   sectionNo: '52142154',
@@ -48,14 +49,14 @@ const OfficeProgress = () => {
 
   return (
     <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+      <Typography variant="h5" className="mb-4 font-semibold text-gray-800 d-inline-block">
         Office &gt; Progress
       </Typography>
       <Button
         variant="contained"
         color="warning"
-        className="mb-4"
-        style={{ float: 'right' }}
+        className="mb-4 !bg-[#FC8908]"
+        style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
       >
         + Create New Project
       </Button>
@@ -101,9 +102,9 @@ const OfficeProgress = () => {
                   <Button
                     variant="text"
                     style={{ color: '#007bff', textTransform: 'none' }}
-                    //startIcon={<img src="document-icon.png" alt="document icon" />}
+                    startIcon={<DescriptionIcon />}
                   >
-                    {/*{row.document}*/}
+                    {row.document}
                   </Button>
                 </Typography>
                 <Box
