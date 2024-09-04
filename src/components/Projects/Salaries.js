@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import {
   Box,
+  Button,
   Checkbox,
-  IconButton,
-  Typography,
+  Divider,
   Grid,
+  IconButton,
+  MenuItem,
+  Modal,
   Paper,
   Select,
-  MenuItem,
-  Divider,
+  TextField,
+  Typography
 } from '@mui/material';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
@@ -19,9 +22,22 @@ const demoData = Array(10).fill({
   salaryPaid: 'Yes',
 });
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+};
+
 const Salaries = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [open, setOpen] = useState(false);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -55,11 +71,23 @@ const Salaries = () => {
     setEntriesPerPage(event.target.value);
   };
 
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
   return (
-    <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        Projects &gt; Salaries
-      </Typography>
+    <Box className="p-6">
+        <Box className="flex justify-between items-center mb-4">
+            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+                Projects &gt; Salaries
+            </Typography>
+            <Button
+                variant="contained"
+                className="mb-4 !bg-[#FC8908]"
+                onClick={handleOpen}
+            >
+                + Add Salary
+            </Button>
+        </Box>
       <Paper elevation={0} className="p-4">
         <Grid container>
           {/* Table Headings */}
@@ -90,7 +118,7 @@ const Salaries = () => {
                 />
                 <Typography className="flex-1">{row.employeeName}</Typography>
                 <Typography className="flex-1">
-                  <span style={{ color: row.salaryPaid === 'Yes' ? 'green' : 'red' }}>
+                  <span style={{ background: row.salaryPaid === 'Yes' ? '#62912C47' : 'red', borderRadius: '30px', padding: '0 8px'  }}>
                     {row.salaryPaid}
                   </span>
                 </Typography>
@@ -111,8 +139,55 @@ const Salaries = () => {
         </Grid>
       </Paper>
 
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
+      {/* Modal for adding new Salary */}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            Add Salary
+          </Typography>
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+          >
+            <TextField
+              required
+              id="employee-name"
+              label="Employee Name"
+              fullWidth
+            />
+            <Select
+              required
+              fullWidth
+              label="Salary Paid"
+              value=""
+              onChange={() => {}}
+              displayEmpty
+            >
+              <MenuItem value="">Select</MenuItem>
+              <MenuItem value="Yes">Yes</MenuItem>
+              <MenuItem value="No">No</MenuItem>
+            </Select>
+            <div className="flex justify-end mt-4">
+              <Button onClick={handleClose} color="error">
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+                Add Salary
+              </Button>
+            </div>
+          </Box>
+        </Box>
+      </Modal>
+
+      <Box className="flex justify-between items-center mt-6">
+        <Box className="flex items-center">
           <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
             Showing
           </Typography>
@@ -129,10 +204,10 @@ const Salaries = () => {
           <Typography variant="body2" color="textSecondary">
             of 10,678 entries
           </Typography>
-        </div>
+        </Box>
         <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

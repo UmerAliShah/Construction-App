@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Checkbox, IconButton, Typography, Grid, Paper, Select, MenuItem, Divider, Button } from '@mui/material';
+import { Box, Button, Checkbox, Divider, Grid, IconButton, MenuItem, Modal, Paper, Select, TextField, Typography } from '@mui/material';
+import Pagination from '../../Pagination'; 
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
-import Pagination from '../../Pagination'; 
 import DescriptionIcon from '@mui/icons-material/Description';
 
 const demoData = Array(10).fill({
@@ -11,9 +11,22 @@ const demoData = Array(10).fill({
   document: 'Site Inspection.pdf',
 });
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+};
+
 const OfficeFinance = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [open, setOpen] = useState(false);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -47,11 +60,23 @@ const OfficeFinance = () => {
     setEntriesPerPage(event.target.value);
   };
 
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
   return (
-    <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        Office &gt; Finance
-      </Typography>
+    <Box className="p-6">
+        <Box className="flex justify-between items-center mb-4">
+            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+                Office &gt; Finance
+            </Typography>
+            <Button
+                variant="contained"
+                className="mb-4 !bg-[#FC8908]"
+                onClick={handleOpen}
+            >
+                + Add Office Finance
+            </Button>
+        </Box>
       <Paper elevation={0} className="p-4">
         <Grid container>
           {/* Table Headings */}
@@ -109,6 +134,54 @@ const OfficeFinance = () => {
         </Grid>
       </Paper>
 
+      {/* Modal for adding new Office Finance */}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            Add Office Finance Entry
+          </Typography>
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+          >
+            <TextField
+              required
+              id="type"
+              label="Type"
+              fullWidth
+            />
+            <TextField
+              required
+              id="amount"
+              label="Amount"
+              fullWidth
+            />
+            <TextField
+              required
+              id="document"
+            //  label="Document"
+              fullWidth
+              type="file"
+            />
+            <div className="flex justify-end mt-4">
+              <Button onClick={handleClose} color="error">
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+                Add Finance Entry
+              </Button>
+            </div>
+          </Box>
+        </Box>
+      </Modal>
+
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
           <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
@@ -130,7 +203,7 @@ const OfficeFinance = () => {
         </div>
         <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
       </div>
-    </div>
+    </Box>
   );
 };
 

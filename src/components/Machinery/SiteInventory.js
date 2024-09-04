@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import {
   Box,
+  Button,
   Checkbox,
-  IconButton,
-  Typography,
+  Divider,
   Grid,
+  IconButton,
+  MenuItem,
+  Modal,
   Paper,
   Select,
-  MenuItem,
-  Divider,
-  Button,
+  TextField,
+  Typography
 } from '@mui/material';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 import DescriptionIcon from '@mui/icons-material/Description';
-import Pagination from '../../Pagination'; 
+import Pagination from '../../Pagination';
 
 const demoData = Array(10).fill({
   machineryName: 'Excavators',
@@ -27,9 +29,32 @@ const demoData = Array(10).fill({
   status: 'In-Progress',
 });
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 600,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+};
+
 const SiteInventory = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    machineryName: '',
+    type: '',
+    working: '',
+    trackingNumber: '',
+    partDemand: '',
+    demandPartType: '',
+    status: '',
+    document: null
+  });
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -63,11 +88,36 @@ const SiteInventory = () => {
     setEntriesPerPage(event.target.value);
   };
 
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log('Form Data:', formData);
+    handleClose();
+  };
+
   return (
-    <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        Machinery &gt; Site Inventory
-      </Typography>
+    <Box className="p-6">
+        <Box className="flex justify-between items-center mb-4">
+            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+                Machinery &gt; Site Inventory
+            </Typography>
+            <Button
+                variant="contained"
+                onClick={handleOpen}
+                sx={{ textTransform: 'none', backgroundColor: '#FC8908', fontWeight: '400', borderRadius: '8px' }}
+                >
+                Create a New Project
+            </Button>
+        </Box>
       <Paper elevation={0} className="p-4">
         <Grid container>
           {/* Table Headings */}
@@ -139,6 +189,79 @@ const SiteInventory = () => {
         </Grid>
       </Paper>
 
+      {/* Modal for creating a new project */}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            Create a New Project
+          </Typography>
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-4">
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <TextField name="machineryName" label="Machinery Name" fullWidth onChange={handleInputChange} required />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField name="type" label="Type" fullWidth onChange={handleInputChange} required />
+                        </Grid>
+                    </Grid>
+
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <Select name="working" fullWidth required value={formData.working} onChange={handleInputChange} displayEmpty>
+                                <MenuItem value="">Select Working</MenuItem>
+                                <MenuItem value="Yes">Yes</MenuItem>
+                                <MenuItem value="No">No</MenuItem>
+                            </Select>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField name="trackingNumber" label="Tracking Number" fullWidth onChange={handleInputChange} required />
+                        </Grid>
+                    </Grid>
+
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <Select name="partDemand" fullWidth required value={formData.partDemand} onChange={handleInputChange} displayEmpty>
+                                <MenuItem value="">Select Part Demand</MenuItem>
+                                <MenuItem value="Yes">Yes</MenuItem>
+                                <MenuItem value="No">No</MenuItem>
+                            </Select>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField name="demandPartType" label="Demand Part Type" fullWidth onChange={handleInputChange} required />
+                        </Grid>
+                    </Grid>
+
+                    <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                            <Select name="status" fullWidth required value={formData.status} onChange={handleInputChange} displayEmpty>
+                                <MenuItem value="">Select Status of Demand</MenuItem>
+                                <MenuItem value="In Progress">In Progress</MenuItem>
+                                <MenuItem value="In Transport">In Transport</MenuItem>
+                                <MenuItem value="Completed">Completed</MenuItem>
+                            </Select>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField name="document" type="file" fullWidth onChange={handleInputChange} required />
+                        </Grid>
+                    </Grid>
+
+                    <div className="flex justify-end mt-4">
+                        <Button onClick={handleClose} color="error">
+                            Cancel
+                        </Button>
+                        <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+                            Submit Project
+                        </Button>
+                    </div>
+                </form>
+        </Box>
+      </Modal>
+
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
           <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
@@ -160,7 +283,7 @@ const SiteInventory = () => {
         </div>
         <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
       </div>
-    </div>
+    </Box>
   );
 };
 

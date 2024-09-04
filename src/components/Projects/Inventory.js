@@ -10,11 +10,15 @@ import {
   MenuItem,
   Divider,
   Button,
+  Modal,
+  TextField,
+  Avatar,
 } from '@mui/material';
+import { styled } from '@mui/system';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 import DescriptionIcon from '@mui/icons-material/Description';
-import Pagination from '../../Pagination'; 
+import Pagination from '../../Pagination';
 
 const demoData = Array(10).fill({
   product: 'Cement',
@@ -23,9 +27,34 @@ const demoData = Array(10).fill({
   document: 'Site Inspection.pdf',
 });
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 600, // Adjusted width to accommodate two columns
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+};
+
+const ImageUploadBox = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  padding: theme.spacing(2),
+  border: `1px dashed grey`,
+  borderRadius: '8px',
+  cursor: 'pointer',
+  marginBottom: theme.spacing(2),
+}));
+
 const Inventory = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [open, setOpen] = useState(false);
+  const [image, setImage] = useState(null);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -59,11 +88,37 @@ const Inventory = () => {
     setEntriesPerPage(event.target.value);
   };
 
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        Projects &gt; Inventory
-      </Typography>
+      <div className="flex justify-between items-center mb-4">
+        <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+          Projects &gt; Inventory
+        </Typography>
+        <Button
+          variant="contained"
+          color="warning"
+          className="mb-4 !bg-[#FC8908]"
+          style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
+          onClick={handleOpen}
+        >
+          + Add New Inventory
+        </Button>
+      </div>
+
       <Paper elevation={0} className="p-4">
         <Grid container>
           {/* Table Headings */}
@@ -97,7 +152,7 @@ const Inventory = () => {
                 <Typography className="flex-1">{row.product}</Typography>
                 <Typography className="flex-1">{row.amountAvailable}</Typography>
                 <Typography className="flex-1">
-                  <span style={{ color: row.moreNeeded === 'Yes' ? 'green' : 'red' }}>
+                  <span style={{ background: row.moreNeeded === 'Yes' ? '#62912C47' : 'red', borderRadius: '30px', padding: '0 8px'  }}>
                     {row.moreNeeded}
                   </span>
                 </Typography>
@@ -148,6 +203,81 @@ const Inventory = () => {
         </div>
         <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
       </div>
+
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            New Product
+          </Typography>
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+          >
+            <ImageUploadBox>
+              <Avatar
+                src={image}
+                alt="Product Image"
+                sx={{ width: 56, height: 56, marginBottom: 2 }}
+              />
+              <Typography variant="body2" color="textSecondary">
+                Drag image here or{' '}
+                <label htmlFor="upload-image" style={{ color: '#FC8908', cursor: 'pointer' }}>
+                  Browse image
+                </label>
+              </Typography>
+              <input
+                type="file"
+                id="upload-image"
+                style={{ display: 'none' }}
+                onChange={handleImageChange}
+              />
+            </ImageUploadBox>
+
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <TextField required id="product-name" label="Product Name" fullWidth />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField required id="product-id" label="Product ID" fullWidth />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField required id="category" label="Category" fullWidth />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField required id="buying-price" label="Buying Price" fullWidth />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField required id="quantity" label="Quantity" fullWidth />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField required id="unit" label="Unit" fullWidth />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField required id="expiry-date" label="Expiry Date" fullWidth />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField required id="threshold-value" label="Threshold Value" fullWidth />
+              </Grid>
+            </Grid>
+
+            <div className="flex justify-between mt-4">
+              <Button onClick={handleClose} color="error">
+                Discard
+              </Button>
+              <Button type="submit" variant="contained" color="warning">
+                Add Product
+              </Button>
+            </div>
+          </Box>
+        </Box>
+      </Modal>
     </div>
   );
 };

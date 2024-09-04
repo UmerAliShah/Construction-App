@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 import Dashboard from './components/dashboard/Dashboard';
 
 import Finances from './components/Department/Finances';
+import FinancialRequests from './components/Department/FinancialRequest';
 
 import IPCTracking from './components/Ofifce/IPCTracking';
 import OfficeFinance from './components/Ofifce/OfficeFinance';
@@ -42,6 +43,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/finances" element={<Finances />} />
+              <Route path="/financial-requests" element={<FinancialRequests />} />
               <Route path="/ipc-tracking" element={<IPCTracking />} />
               <Route path="/office-finances" element={<OfficeFinance />} />
               <Route path="/office-progress" element={<OfficeProgress />} />

@@ -8,12 +8,36 @@ import {
   Paper,
   Select,
   MenuItem,
-  Divider,
-  Button,
+  Divider, Avatar,
+  Button, TextField, Modal,
 } from '@mui/material';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
+import { styled } from '@mui/system';
 import Pagination from '../../Pagination'; 
+
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+};
+
+const ImageUploadBox = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: theme.spacing(2),
+    border: `1px dashed grey`,
+    borderRadius: '8px',
+    cursor: 'pointer',
+    marginBottom: theme.spacing(2),
+  }));
 
 const demoData = Array(10).fill({
   name: 'Jacob Swanson',
@@ -25,6 +49,22 @@ const demoData = Array(10).fill({
 const Vendors = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [open, setOpen] = useState(false);
+  const [image, setImage] = useState(null);
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -32,6 +72,9 @@ const Vendors = () => {
     } else {
       setSelected([]);
     }
+  };
+  const handleClick = () => {
+    handleOpen();
   };
 
   const handleSelect = (index) => {
@@ -60,9 +103,20 @@ const Vendors = () => {
 
   return (
     <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        Projects &gt; Vendors
-      </Typography>
+        <div className="flex justify-between items-center mb-4">
+            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+                Projects &gt; Vendors
+            </Typography>
+            <Button
+                    variant="contained"
+                    color="warning"
+                    className="mb-4 !bg-[#FC8908]"
+                    style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
+                    onClick={handleClick}
+                >
+                    + Add New Vendor
+                </Button>
+        </div>
       <Paper elevation={0} className="p-4">
         <Grid container>
           {/* Table Headings */}
@@ -97,7 +151,7 @@ const Vendors = () => {
                 <Typography className="flex-1">{row.email}</Typography>
                 <Typography className="flex-1">{row.phone}</Typography>
                 <Typography className="flex-1">
-                  <span style={{ color: 'green' }}>{row.status}</span>
+                  <span style={{ background: row.status === 'Active' ? '#62912C47' : 'red', borderRadius: '30px', padding: '10px'  }}>{row.status}</span>
                 </Typography>
                 <Box
                   className="flex items-center justify-between rounded-lg border border-gray-300"
@@ -115,6 +169,81 @@ const Vendors = () => {
           ))}
         </Grid>
       </Paper>
+
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            New Vendor
+          </Typography>
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+          >
+            <ImageUploadBox>
+              <Avatar
+                src={image}
+                alt="Vendor Image"
+                sx={{ width: 56, height: 56, marginBottom: 2 }}
+              />
+              <Typography variant="body2" color="textSecondary">
+                Drag Image here or{' '}
+                <label htmlFor="upload-image" style={{ color: '#FC8908', cursor: 'pointer' }}>
+                  Browse image
+                </label>
+              </Typography>
+              <input
+                type="file"
+                id="upload-image"
+                style={{ display: 'none' }}
+                onChange={handleImageChange}
+              />
+            </ImageUploadBox>
+            <TextField
+              required
+              id="vendor-name"
+              label="Vendor Name"
+              fullWidth
+            />
+            <TextField
+              required
+              id="email"
+              label="Email"
+              fullWidth
+            />
+            <TextField
+              required
+              id="phone"
+              label="Phone"
+              fullWidth
+            />
+            <TextField
+              id="address"
+              label="Address"
+              fullWidth
+            />
+            <TextField
+              id="contact-number"
+              label="Contact Number"
+              fullWidth
+            />
+            <div className="flex self-end mt-4">
+              <Button onClick={handleClose} color="error" className='border !mr-4'>
+                Discard
+              </Button>
+              <Button type="submit" variant="contained" color="warning">
+                Add Vendor
+              </Button>
+            </div>
+          </Box>
+        </Box>
+      </Modal>
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
