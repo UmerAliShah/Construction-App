@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import {
   Box,
+  Button,
   Checkbox,
-  IconButton,
-  Typography,
+  Divider,
   Grid,
+  IconButton,
+  MenuItem,
+  Modal,
   Paper,
   Select,
-  MenuItem,
-  Divider,
-  Button,
+  TextField,
+  Typography
 } from '@mui/material';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
@@ -22,9 +24,22 @@ const demoData = Array(10).fill({
   document: 'Site Inspection.pdf',
 });
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+};
+
 const Progress = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [open, setOpen] = useState(false);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -58,11 +73,23 @@ const Progress = () => {
     setEntriesPerPage(event.target.value);
   };
 
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
   return (
-    <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        Projects &gt; Progress
-      </Typography>
+    <Box className="p-6">
+        <Box className="flex justify-between items-center mb-4">
+            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+                Projects &gt; Progress
+            </Typography>
+            <Button
+                variant="contained"
+                className="mb-4 !bg-[#FC8908]"
+                onClick={handleOpen}
+            >
+                + Add Project Progress
+            </Button>
+        </Box>
       <Paper elevation={0} className="p-4">
         <Grid container>
           {/* Table Headings */}
@@ -120,6 +147,54 @@ const Progress = () => {
         </Grid>
       </Paper>
 
+      {/* Modal for adding new Project Progress */}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            Add Project Progress
+          </Typography>
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+          >
+            <TextField
+              required
+              id="project-section"
+              label="Project Section"
+              fullWidth
+            />
+            <TextField
+              required
+              id="submitted-by"
+              label="Submitted by"
+              fullWidth
+            />
+            <TextField
+              required
+              id="document"
+            //  label="Document"
+              type="file"
+              fullWidth
+            />
+            <div className="flex justify-end mt-4">
+              <Button onClick={handleClose} color="error">
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+                Add Progress
+              </Button>
+            </div>
+          </Box>
+        </Box>
+      </Modal>
+
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
           <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
@@ -141,7 +216,7 @@ const Progress = () => {
         </div>
         <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
       </div>
-    </div>
+    </Box>
   );
 };
 

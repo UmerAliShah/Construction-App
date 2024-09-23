@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Checkbox, IconButton, Typography, Grid, Paper, Select, MenuItem, Button, Divider } from '@mui/material';
+import { Box, Button, Checkbox, Divider, Grid, IconButton, MenuItem, Modal, Paper, Select, TextField, Typography } from '@mui/material';
+import Pagination from '../../Pagination'; 
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
-import Pagination from '../../Pagination'; 
 import DescriptionIcon from '@mui/icons-material/Description';
 
 const demoData = Array(10).fill({
@@ -13,9 +13,22 @@ const demoData = Array(10).fill({
   document: 'Site Inspection.pdf',
 });
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+};
+
 const IPCTracking = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [open, setOpen] = useState(false);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -49,11 +62,23 @@ const IPCTracking = () => {
     setEntriesPerPage(event.target.value);
   };
 
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
   return (
     <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        Office &gt; IPC Tracking
-      </Typography>
+        <div className="flex justify-between items-center mb-4">
+            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+                Office &gt; IPC Tracking
+            </Typography>
+            <Button
+                variant="contained"
+                className="mb-4 !bg-[#FC8908]"
+                onClick={handleOpen}
+            >
+                + Add IPC Tracking
+            </Button>
+        </div>
       <Paper elevation={0} className="p-4">
         <Grid container>
           {/* Table Headings */}
@@ -122,6 +147,71 @@ const IPCTracking = () => {
           ))}
         </Grid>
       </Paper>
+
+      {/* Modal for adding new IPC tracking */}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            Add IPC Tracking
+          </Typography>
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+          >
+            <TextField
+              required
+              id="project-name"
+              label="Project Name"
+              fullWidth
+            />
+            <TextField
+              required
+              id="ipc-number"
+              label="IPC Number"
+              fullWidth
+            />
+            <TextField
+              required
+              id="ipc-amount"
+              label="IPC Amount"
+              fullWidth
+            />
+            <Select
+              required
+              fullWidth
+              value={''}
+              onChange={() => {}}
+              displayEmpty
+            >
+              <MenuItem value="">Select Status</MenuItem>
+              <MenuItem value="In-Progress">In-Progress</MenuItem>
+              <MenuItem value="Completed">Completed</MenuItem>
+            </Select>
+            <TextField
+              required
+              id="document"
+            //  label="Document"
+              fullWidth
+              type="file"
+            />
+            <div className="flex justify-end mt-4">
+              <Button onClick={handleClose} color="error">
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+                Add IPC Tracking
+              </Button>
+            </div>
+          </Box>
+        </Box>
+      </Modal>
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">

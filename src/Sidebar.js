@@ -5,12 +5,23 @@ import { ReactComponent as OfficeIcon } from './components/Icons/Office.svg';
 import { ReactComponent as ProjectsIcon } from './components/Icons/Projects.svg';
 import { ReactComponent as MachinaryIcon } from './components/Icons/Machinary.svg';
 import { ReactComponent as LogoutIcon } from './components/Icons/Logout.svg';
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { logout } from './redux/counterSlice';
 
 const Sidebar = () => {
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
   const [openDropdown, setOpenDropdown] = useState(null);
 
   const handleToggle = (section) => {
     setOpenDropdown(openDropdown === section ? null : section);
+  };
+
+  const handleLogout = () => {
+    console.log('ni chalya')
+    dispatch(logout());
+    navigate("/login");
   };
 
   const DropdownIcon = ({ isOpen }) => (
@@ -119,6 +130,12 @@ const Sidebar = () => {
                 Employees
               </NavLink>
               <NavLink
+                to="/pending-employees"
+                className={({ isActive }) => (isActive ? 'block py-1 !text-orange-500' : 'block py-1')}
+              >
+                Pending Requests
+              </NavLink>
+              <NavLink
                 to="/vendors"
                 className={({ isActive }) => (isActive ? 'block py-1 !text-orange-500' : 'block py-1')}
               >
@@ -193,9 +210,9 @@ const Sidebar = () => {
           )}
         </div>
       </div>
-        <NavLink to="/logout" className={({ isActive }) => (isActive ? 'ml-2 !text-orange-500' : 'ml-2')}>
+        <NavLink className={({ isActive }) => (isActive ? 'ml-2 !text-orange-500' : 'ml-2')}  onClick={() => handleLogout()}>
             <div className="p-4 border-t flex items-center">
-                    <LogoutIcon className="!text-orange-500 w-6 h-6" />
+                    <LogoutIcon className="!text-orange-500 w-6 h-6"  />
                     <span className="ml-2">Logout</span>
             </div>
         </NavLink>

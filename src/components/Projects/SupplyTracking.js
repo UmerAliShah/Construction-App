@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import {
   Box,
+  Button,
   Checkbox,
-  IconButton,
-  Typography,
+  Divider,
   Grid,
+  IconButton,
+  MenuItem,
+  Modal,
   Paper,
   Select,
-  MenuItem,
-  Divider,
-  Button,
+  TextField,
+  Typography
 } from '@mui/material';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
@@ -22,9 +24,22 @@ const demoData = Array(10).fill({
   document: 'Site Inspection.pdf',
 });
 
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+};
+
 const SupplyTracking = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [open, setOpen] = useState(false);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -58,11 +73,23 @@ const SupplyTracking = () => {
     setEntriesPerPage(event.target.value);
   };
 
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
   return (
-    <div className="p-6">
-      <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        Projects &gt; Supply Tracking
-      </Typography>
+    <Box className="p-6">
+        <Box className="flex justify-between items-center mb-4">
+            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+                Projects &gt; Supply Tracking
+            </Typography>
+            <Button
+                variant="contained"
+                className="mb-4 !bg-[#FC8908]"
+                onClick={handleOpen}
+            >
+                + Add Supply Tracking
+            </Button>
+      </Box>
       <Paper elevation={0} className="p-4">
         <Grid container>
           {/* Table Headings */}
@@ -94,7 +121,7 @@ const SupplyTracking = () => {
                 />
                 <Typography className="flex-1">{row.orderReferenceNumber}</Typography>
                 <Typography className="flex-1">
-                  <span style={{ color: row.amountFulfilled === 'Yes' ? 'green' : 'red' }}>
+                  <span style={{ background: row.amountFulfilled === 'Yes' ? '#62912C47' : 'red', borderRadius: '30px', padding: '0 8px'  }}>
                     {row.amountFulfilled}
                   </span>
                 </Typography>
@@ -124,8 +151,61 @@ const SupplyTracking = () => {
         </Grid>
       </Paper>
 
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
+      {/* Modal for adding new Supply Tracking */}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            Add Supply Tracking
+          </Typography>
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+          >
+            <TextField
+              required
+              id="order-reference-number"
+              label="Order Reference Number"
+              fullWidth
+            />
+            <Select
+              required
+              fullWidth
+              value=""
+              onChange={() => {}}
+              displayEmpty
+            >
+              <MenuItem value="">Select Fulfillment</MenuItem>
+              <MenuItem value="Yes">Yes</MenuItem>
+              <MenuItem value="No">No</MenuItem>
+            </Select>
+            <TextField
+              required
+              id="picture-document"
+            //  label="Picture/Document"
+              type="file"
+              fullWidth
+            />
+            <Box className="flex justify-end mt-4">
+              <Button onClick={handleClose} color="error">
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+                Add Tracking
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      </Modal>
+
+      <Box className="flex justify-between items-center mt-6">
+        <Box className="flex items-center">
           <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
             Showing
           </Typography>
@@ -142,10 +222,10 @@ const SupplyTracking = () => {
           <Typography variant="body2" color="textSecondary">
             of 10,678 entries
           </Typography>
-        </div>
+        </Box>
         <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

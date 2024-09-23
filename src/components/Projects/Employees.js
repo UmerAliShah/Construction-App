@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Checkbox,
@@ -10,23 +10,24 @@ import {
   MenuItem,
   Divider,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from '@mui/material';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 import Pagination from '../../Pagination';
-import { useNavigate } from 'react-router-dom'; 
-
-const demoData = Array(10).fill({
-  name: 'Jacob Swanson',
-  id: 'DC125',
-  phone: '555-123-4567',
-  role: 'Owner Assistants',
-  status: 'Active',
-});
+import { useNavigate } from 'react-router-dom';
+import apiClient from '../../api/apiClient';
 
 const Employees = () => {
+  const [employees, setEmployees] = useState([]);
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [openDialog, setOpenDialog] = useState(false); // State to control dialog visibility
+  const [userToDelete, setUserToDelete] = useState(null); // State to store the selected user for deletion
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -35,10 +36,19 @@ const Employees = () => {
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelected(demoData.map((_, index) => index));
+      setSelected(employees.map((_, index) => index));
     } else {
       setSelected([]);
     }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [])
+
+  const fetchUsers = async () => {
+    const response = await apiClient.get('/users/');
+    setEmployees(response.data);
   };
 
   const handleSelect = (index) => {
@@ -65,20 +75,44 @@ const Employees = () => {
     setEntriesPerPage(event.target.value);
   };
 
+  const handleViewEmployee = (id) => {
+    navigate(`/add-employee/${id}`);
+  };  
+
+  const handleDelete = async () => {
+    try {
+        await apiClient.delete(`/users/${userToDelete}`);
+      // Remove the deleted user from the state
+      setEmployees(employees.filter((employee) => employee._id !== userToDelete));
+      setOpenDialog(false); // Close the dialog after deletion
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+    }
+  };
+
+  const handleOpenDialog = (userId) => {
+    setUserToDelete(userId);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
   return (
     <div className="p-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4">
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-            Projects &gt; Employees
+          Projects &gt; Employees
         </Typography>
         <Button
-            variant="contained"
-            color="warning"
-            className="mb-4 !bg-[#FC8908]"
-            style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
-            onClick={handleClick}
+          variant="contained"
+          color="warning"
+          className="mb-4 !bg-[#FC8908]"
+          style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
+          onClick={handleClick}
         >
-            + Add New Employee
+          + Add New Employee
         </Button>
       </div>
       <Paper elevation={0} className="p-4">
@@ -88,8 +122,8 @@ const Employees = () => {
             <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
               <Checkbox
                 color="primary"
-                indeterminate={selected.length > 0 && selected.length < demoData.length}
-                checked={demoData.length > 0 && selected.length === demoData.length}
+                indeterminate={selected.length > 0 && selected.length < employees.length}
+                checked={employees.length > 0 && selected.length === employees.length}
                 onChange={handleSelectAll}
               />
               <Typography className="flex-1 !font-semibold">Employee Name</Typography>
@@ -102,7 +136,7 @@ const Employees = () => {
           </Grid>
 
           {/* Table Rows */}
-          {demoData.map((row, index) => (
+          {employees.map((employee, index) => (
             <Grid item xs={12} key={index}>
               <Box
                 className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2"
@@ -112,21 +146,21 @@ const Employees = () => {
                   checked={selected.indexOf(index) !== -1}
                   onChange={() => handleSelect(index)}
                 />
-                <Typography className="flex-1">{row.name}</Typography>
-                <Typography className="flex-1">{row.id}</Typography>
-                <Typography className="flex-1">{row.phone}</Typography>
-                <Typography className="flex-1">{row.role}</Typography>
+                <Typography className="flex-1">{employee.name}</Typography>
+                <Typography className="flex-1">{employee.employeeId}</Typography>
+                <Typography className="flex-1">{employee.phone}</Typography>
+                <Typography className="flex-1">{employee.role}</Typography>
                 <Typography className="flex-1">
-                  <span style={{ background: '#62912C47', borderRadius: '30px', padding: '10px' }}>{row.status}</span>
+                  <span style={{ background: '#62912C47', borderRadius: '30px', padding: '10px' }}>{employee.status}</span>
                 </Typography>
                 <Box
                   className="flex items-center justify-between rounded-lg border border-gray-300"
                   sx={{ backgroundColor: '#f8f9fa' }}>
-                  <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
+                  <IconButton aria-label="view" sx={{ color: '#6c757d' }} onClick={() => handleViewEmployee(employee._id)}>
                     <VisibilityIcon />
                   </IconButton>
                   <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }} onClick={() => handleOpenDialog(employee._id)}>
                     <DeleteIcon />
                   </IconButton>
                 </Box>
@@ -152,11 +186,29 @@ const Employees = () => {
             <MenuItem value={50}>50</MenuItem>
           </Select>
           <Typography variant="body2" color="textSecondary">
-            of 10,678 entries
+            of {employees.length} entries
           </Typography>
         </div>
         <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this user?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="secondary">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
