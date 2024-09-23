@@ -1,9 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 import { Container, Navbar } from "react-bootstrap";
 import logo from '../assets/logo.png';
+import apiClient from "../api/apiClient";
 
 const Header = () => {
+    const [userDetails, setUserDetails] = useState();
+
+    useEffect(() => {
+        fetchUserDetails();
+      }, []);
+      
+      const fetchUserDetails = async () => {
+        try {
+          const userId = localStorage.getItem('userId'); // Adjust based on where you're storing the user ID
+    
+          if (userId) {
+            const res = await apiClient.get(`/users/${userId}`);
+            if (res.status === 200) {
+              setUserDetails(res.data);
+            }
+          } else {
+            console.log('User ID not found');
+          }
+        } catch (error) {
+          console.error('Error fetching user details:', error);
+        }
+      };
+
   return (
     <Navbar className="bg-white shadow-md py-2" expand="lg">
       <Container fluid className="flex items-center justify-between">
@@ -27,8 +51,8 @@ const Header = () => {
             </svg>
           </div>
           <div className="text-gray-700 flex flex-col items-end">
-            <span className="mr-2">Joshua Spencer</span>
-            <span className="text-sm text-gray-500">Admin</span>
+            <span className="mr-2">{userDetails?.name}</span>
+            <span className="text-sm text-gray-500">{userDetails?.role}</span>
           </div>
           <img
             src="/path/to/profile.jpg" // Replace with the actual path to the profile picture
