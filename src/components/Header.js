@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { Container, Navbar } from "react-bootstrap";
 import logo from '../assets/logo.png';
 import apiClient from "../api/apiClient";
+import { useSelector } from "react-redux";
 
 const Header = () => {
     const [userDetails, setUserDetails] = useState();
+    const { userId } = useSelector((state) => state.auth);
 
     useEffect(() => {
         fetchUserDetails();
@@ -13,10 +15,9 @@ const Header = () => {
       
       const fetchUserDetails = async () => {
         try {
-          const userId = localStorage.getItem('userId'); // Adjust based on where you're storing the user ID
-    
           if (userId) {
             const res = await apiClient.get(`/users/${userId}`);
+            console.log(res, userId);
             if (res.status === 200) {
               setUserDetails(res.data);
             }
@@ -55,7 +56,7 @@ const Header = () => {
             <span className="text-sm text-gray-500">{userDetails?.role}</span>
           </div>
           <img
-            src="/path/to/profile.jpg" // Replace with the actual path to the profile picture
+            src={userDetails?.profileImage} // Replace with the actual path to the profile picture
             alt="Profile"
             className="h-10 w-10 rounded-full"
           />
