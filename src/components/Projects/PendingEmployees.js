@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -12,8 +12,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-} from '@mui/material';
-import apiClient from '../../api/apiClient'; // Assuming you're using apiClient for API requests
+} from "@mui/material";
+import apiClient from "../../api/apiClient"; // Assuming you're using apiClient for API requests
 
 const PendingEmployees = () => {
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -26,10 +26,10 @@ const PendingEmployees = () => {
 
   const fetchPendingRequests = async () => {
     try {
-      const response = await apiClient.get('/requests/pending'); // Replace with your actual endpoint
+      const response = await apiClient.get("/users/approve"); // Replace with your actual endpoint
       setPendingRequests(response.data);
     } catch (error) {
-      console.error('Error fetching pending requests:', error);
+      console.error("Error fetching pending requests:", error);
     }
   };
 
@@ -41,16 +41,15 @@ const PendingEmployees = () => {
   const handleConfirmAction = async () => {
     try {
       const { requestId, action } = selectedRequest;
-      await apiClient.put(`/requests/${requestId}`, { status: action }); // Make an API call to update the status
-
-      // Update the pendingRequests state to remove the processed request
-      setPendingRequests((prevRequests) =>
-        prevRequests.filter((request) => request._id !== requestId)
-      );
-
-      setOpenDialog(false);
+      const result = await apiClient.post(`/users/approve/${requestId}`, {
+        status: action,
+      });
+      if (result.status === 200) {
+        fetchPendingRequests();
+        setOpenDialog(false);
+      }
     } catch (error) {
-      console.error('Error updating request status:', error);
+      console.error("Error updating request status:", error);
     }
   };
 
@@ -69,8 +68,10 @@ const PendingEmployees = () => {
           {/* Table Headings */}
           <Grid item xs={12}>
             <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Typography className="flex-1 !font-semibold">Request Name</Typography>
-              <Typography className="flex-1 !font-semibold">Requester</Typography>
+              <Typography className="flex-1 !font-semibold">
+                Request Name
+              </Typography>
+              <Typography className="flex-1 !font-semibold">Role</Typography>
               <Typography className="flex-1 !font-semibold">Date</Typography>
               <Typography className="flex-1 !font-semibold">Action</Typography>
             </Box>
@@ -81,8 +82,10 @@ const PendingEmployees = () => {
             <Grid item xs={12} key={index}>
               <Box className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2">
                 <Typography className="flex-1">{request.name}</Typography>
-                <Typography className="flex-1">{request.requester}</Typography>
-                <Typography className="flex-1">{new Date(request.date).toLocaleDateString()}</Typography>
+                <Typography className="flex-1">{request.role}</Typography>
+                <Typography className="flex-1">
+                  {new Date(request.createdAt).toLocaleDateString()}
+                </Typography>
 
                 <Select
                   value=""
@@ -90,11 +93,11 @@ const PendingEmployees = () => {
                   onChange={(e) =>
                     handleApproveDisapprove(request._id, e.target.value)
                   }
-                  renderValue={() => 'Select Action'}
+                  renderValue={() => "Select Action"}
                   className="flex-1"
                 >
-                  <MenuItem value="approve">Approve</MenuItem>
-                  <MenuItem value="disapprove">Disapprove</MenuItem>
+                  <MenuItem value="approved">Approve</MenuItem>
+                  <MenuItem value="rejected">Reject</MenuItem>
                 </Select>
               </Box>
             </Grid>

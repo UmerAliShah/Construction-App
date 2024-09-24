@@ -11,7 +11,7 @@ const Header = () => {
 
     useEffect(() => {
         fetchUserDetails();
-      }, []);
+      }, [userId]);
       
       const fetchUserDetails = async () => {
         try {

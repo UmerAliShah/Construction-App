@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Checkbox,
@@ -15,23 +15,26 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-} from '@mui/material';
-import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
-import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
-import Pagination from '../../Pagination';
-import { useNavigate } from 'react-router-dom';
-import apiClient from '../../api/apiClient';
+} from "@mui/material";
+import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
+import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
+import Pagination from "../../Pagination";
+import { useLocation, useNavigate } from "react-router-dom";
+import apiClient from "../../api/apiClient";
+import { useSelector } from "react-redux";
 
 const Employees = () => {
+  const location = useLocation();
+  const selectedProject = location.state?.data;
   const [employees, setEmployees] = useState([]);
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
-  const [openDialog, setOpenDialog] = useState(false); // State to control dialog visibility
-  const [userToDelete, setUserToDelete] = useState(null); // State to store the selected user for deletion
+  const [openDialog, setOpenDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate('/add-employee');
+    navigate("/add-employee");
   };
 
   const handleSelectAll = (event) => {
@@ -43,11 +46,19 @@ const Employees = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [])
+    if (selectedProject) {
+      setEmployees([
+        ...selectedProject.employees,
+        selectedProject.siteHead,
+        selectedProject.assistant,
+      ]);
+    } else {
+      fetchUsers();
+    }
+  }, [selectedProject]);
 
   const fetchUsers = async () => {
-    const response = await apiClient.get('/users/');
+    const response = await apiClient.get("/users/");
     setEmployees(response.data);
   };
 
@@ -77,16 +88,18 @@ const Employees = () => {
 
   const handleViewEmployee = (id) => {
     navigate(`/add-employee/${id}`);
-  };  
+  };
 
   const handleDelete = async () => {
     try {
-        await apiClient.delete(`/users/${userToDelete}`);
+      await apiClient.delete(`/users/${userToDelete}`);
       // Remove the deleted user from the state
-      setEmployees(employees.filter((employee) => employee._id !== userToDelete));
+      setEmployees(
+        employees.filter((employee) => employee._id !== userToDelete)
+      );
       setOpenDialog(false); // Close the dialog after deletion
     } catch (error) {
-      console.error('Error deleting employee:', error);
+      console.error("Error deleting employee:", error);
     }
   };
 
@@ -109,7 +122,12 @@ const Employees = () => {
           variant="contained"
           color="warning"
           className="mb-4 !bg-[#FC8908]"
-          style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
+          style={{
+            float: "right",
+            textTransform: "capitalize",
+            fontWeight: "400",
+            borderRadius: "8px",
+          }}
           onClick={handleClick}
         >
           + Add New Employee
@@ -122,13 +140,21 @@ const Employees = () => {
             <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
               <Checkbox
                 color="primary"
-                indeterminate={selected.length > 0 && selected.length < employees.length}
-                checked={employees.length > 0 && selected.length === employees.length}
+                indeterminate={
+                  selected.length > 0 && selected.length < employees.length
+                }
+                checked={
+                  employees.length > 0 && selected.length === employees.length
+                }
                 onChange={handleSelectAll}
               />
-              <Typography className="flex-1 !font-semibold">Employee Name</Typography>
+              <Typography className="flex-1 !font-semibold">
+                Employee Name
+              </Typography>
               <Typography className="flex-1 !font-semibold">ID</Typography>
-              <Typography className="flex-1 !font-semibold">Phone Number</Typography>
+              <Typography className="flex-1 !font-semibold">
+                Phone Number
+              </Typography>
               <Typography className="flex-1 !font-semibold">Role</Typography>
               <Typography className="flex-1 !font-semibold">Status</Typography>
               <Typography className="!font-semibold">Action</Typography>
@@ -138,29 +164,50 @@ const Employees = () => {
           {/* Table Rows */}
           {employees.map((employee, index) => (
             <Grid item xs={12} key={index}>
-              <Box
-                className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2"
-              >
+              <Box className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2">
                 <Checkbox
                   color="primary"
                   checked={selected.indexOf(index) !== -1}
                   onChange={() => handleSelect(index)}
                 />
                 <Typography className="flex-1">{employee.name}</Typography>
-                <Typography className="flex-1">{employee.employeeId}</Typography>
+                <Typography className="flex-1">
+                  {employee.employeeId}
+                </Typography>
                 <Typography className="flex-1">{employee.phone}</Typography>
                 <Typography className="flex-1">{employee.role}</Typography>
                 <Typography className="flex-1">
-                  <span style={{ background: '#62912C47', borderRadius: '30px', padding: '10px' }}>{employee.status}</span>
+                  <span
+                    style={{
+                      background: "#62912C47",
+                      borderRadius: "30px",
+                      padding: "10px",
+                    }}
+                  >
+                    {employee.status}
+                  </span>
                 </Typography>
                 <Box
                   className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: '#f8f9fa' }}>
-                  <IconButton aria-label="view" sx={{ color: '#6c757d' }} onClick={() => handleViewEmployee(employee._id)}>
+                  sx={{ backgroundColor: "#f8f9fa" }}
+                >
+                  <IconButton
+                    aria-label="view"
+                    sx={{ color: "#6c757d" }}
+                    onClick={() => handleViewEmployee(employee._id)}
+                  >
                     <VisibilityIcon />
                   </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }} onClick={() => handleOpenDialog(employee._id)}>
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ borderColor: "#e0e0e0" }}
+                  />
+                  <IconButton
+                    aria-label="delete"
+                    sx={{ color: "#dc3545" }}
+                    onClick={() => handleOpenDialog(employee._id)}
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </Box>
@@ -172,7 +219,11 @@ const Employees = () => {
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
-          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            className="mr-2 pr-2"
+          >
             Showing
           </Typography>
           <Select
@@ -189,7 +240,10 @@ const Employees = () => {
             of {employees.length} entries
           </Typography>
         </div>
-        <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
+        <Pagination
+          count={5}
+          onPageChange={(page) => console.log("Page:", page)}
+        />
       </div>
 
       {/* Confirmation Dialog */}
