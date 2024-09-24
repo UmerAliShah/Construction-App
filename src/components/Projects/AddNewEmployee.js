@@ -44,6 +44,7 @@ const AddNewEmployee = () => {
     address: '',
     //profileImage: null,
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -101,6 +102,7 @@ const AddNewEmployee = () => {
     }
 
     try {
+        setLoading(true);
       const response = await apiClient.post('/users', form);
       navigate(`/employees`);
 
@@ -112,6 +114,8 @@ const AddNewEmployee = () => {
     } catch (error) {
       console.error('Error:', error);
       setError('Error adding employee');
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -247,8 +251,8 @@ const AddNewEmployee = () => {
           <Link href="/employees" underline="none" variant="button" sx={{ mr: 2, color: '#979797 !important', textTransform: 'capitalize !important' }}>
             Cancel
           </Link>
-          <Button variant="contained" color="warning" type="submit" className='!capitalize'>
-            Save
+          <Button variant="contained" color="warning" type="submit" className='!capitalize' disabled={loading}>
+                {loading ? 'Saving...' : 'Save'}
           </Button>
         </Box>
       </Box>
