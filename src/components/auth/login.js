@@ -27,11 +27,12 @@ const Login = () => {
         const result = await request(submitData);
         if (result.status === 200) {
             setAuthToken(result?.data?.token);
+            console.log(result, 'login')
             dispatch(
               login({
                 token: result?.data?.token,
-                //userId: result?.data?.userId,
-                role: result?.data?.role,
+                userId: result?.data?.user._id,
+                role: result?.data?.user.role,
                 //active: result?.data?.active,
               })
             );

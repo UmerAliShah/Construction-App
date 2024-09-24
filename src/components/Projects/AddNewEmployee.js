@@ -80,7 +80,7 @@ const AddNewEmployee = () => {
     setFormData({ ...formData, profileImage: e.target.files[0] });
   };
 
-  const handleSubmit1 = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -112,22 +112,6 @@ const AddNewEmployee = () => {
     } catch (error) {
       console.error('Error:', error);
       setError('Error adding employee');
-    }
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      if (id) {
-        // Update existing employee
-        await apiClient.put(`/users/${id}`, employeeData);
-      } else {
-        // Add new employee
-        await apiClient.post('/users/', employeeData);
-      }
-      // Redirect or show success message as needed
-    } catch (error) {
-      console.error('Error submitting form:', error);
     }
   };
 
