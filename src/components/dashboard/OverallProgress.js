@@ -12,7 +12,7 @@ const OverallProgress = () => {
   const completedPercentage = (data.completed / data.totalProjects) * 100;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-white md:p-6 p-3 rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-700">Overall Progress</h2>
         <select

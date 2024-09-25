@@ -10,7 +10,19 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "./redux/counterSlice";
 import apiClient from "./api/apiClient";
 
-const Sidebar = () => {
+export const fetchSites = async (setProjects) => {
+  try {
+    const result = await apiClient.get("/projects");
+    console.log(result, "sites");
+    if (result.status === 200) {
+      setProjects(result.data); // Call setProjects if provided
+    }
+  } catch (error) {
+    console.error("Error fetching sites:", error);
+  }
+};
+
+const Sidebar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { role } = useSelector((state) => state.auth);
@@ -22,16 +34,9 @@ const Sidebar = () => {
   const handleToggle = (section) => {
     setOpenDropdown(openDropdown === section ? null : section);
   };
-  const fetchSites = async () => {
-    const result = await apiClient.get("/projects");
-    console.log(result, "sites");
-    if (result.status === 200) {
-      setProjects(result.data);
-    }
-  };
 
   useEffect(() => {
-    fetchSites();
+    fetchSites(setProjects);
   }, [role]);
 
   const handleLogout = () => {
@@ -42,6 +47,7 @@ const Sidebar = () => {
 
   const handleProjectClick = (project) => {
     setSelectedProject(selectedProject === project ? null : project);
+    toggleSidebar();
   };
 
   const DropdownIcon = ({ isOpen }) => (
@@ -84,6 +90,7 @@ const Sidebar = () => {
               <div className="ml-6 mt-2">
                 <NavLink
                   to="/finances"
+                  onClick={toggleSidebar}
                   className={({ isActive }) =>
                     isActive ? "block py-1 !text-orange-500" : "block py-1"
                   }
@@ -92,6 +99,7 @@ const Sidebar = () => {
                 </NavLink>
                 <NavLink
                   to="/financial-requests"
+                  onClick={toggleSidebar}
                   className={({ isActive }) =>
                     isActive ? "block py-1 !text-orange-500" : "block py-1"
                   }
@@ -122,6 +130,7 @@ const Sidebar = () => {
               <div className="ml-6 mt-2">
                 <NavLink
                   to="/ipc-tracking"
+                  onClick={toggleSidebar}
                   className={({ isActive }) =>
                     isActive ? "block py-1 !text-orange-500" : "block py-1"
                   }
@@ -130,6 +139,7 @@ const Sidebar = () => {
                 </NavLink>
                 <NavLink
                   to="/office-finances"
+                  onClick={toggleSidebar}
                   className={({ isActive }) =>
                     isActive ? "block py-1 !text-orange-500" : "block py-1"
                   }
@@ -138,6 +148,7 @@ const Sidebar = () => {
                 </NavLink>
                 <NavLink
                   to="/employees"
+                  onClick={toggleSidebar}
                   className={({ isActive }) =>
                     isActive ? "block py-1 !text-orange-500" : "block py-1"
                   }
@@ -146,6 +157,7 @@ const Sidebar = () => {
                 </NavLink>
                 <NavLink
                   to="/office-progress"
+                  onClick={toggleSidebar}
                   className={({ isActive }) =>
                     isActive ? "block py-1 !text-orange-500" : "block py-1"
                   }
@@ -192,6 +204,7 @@ const Sidebar = () => {
                       <div className="ml-4">
                         <NavLink
                           to="/employees"
+                          onClick={toggleSidebar}
                           state={{ data: selectedProject }}
                           className={({ isActive }) =>
                             isActive
@@ -203,6 +216,7 @@ const Sidebar = () => {
                         </NavLink>
                         <NavLink
                           to="/pending-employees"
+                          onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
                               ? "block py-1 !text-orange-500"
@@ -213,6 +227,7 @@ const Sidebar = () => {
                         </NavLink>
                         <NavLink
                           to="/vendors"
+                          onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
                               ? "block py-1 !text-orange-500"
@@ -223,6 +238,7 @@ const Sidebar = () => {
                         </NavLink>
                         <NavLink
                           to="/project-finances"
+                          onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
                               ? "block py-1 !text-orange-500"
@@ -233,6 +249,7 @@ const Sidebar = () => {
                         </NavLink>
                         <NavLink
                           to="/project-inventory"
+                          onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
                               ? "block py-1 !text-orange-500"
@@ -243,6 +260,7 @@ const Sidebar = () => {
                         </NavLink>
                         <NavLink
                           to="/project-progress"
+                          onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
                               ? "block py-1 !text-orange-500"
@@ -253,6 +271,7 @@ const Sidebar = () => {
                         </NavLink>
                         <NavLink
                           to="/supply-tracking"
+                          onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
                               ? "block py-1 !text-orange-500"
@@ -263,6 +282,7 @@ const Sidebar = () => {
                         </NavLink>
                         <NavLink
                           to="/salaries"
+                          onClick={toggleSidebar}
                           state={{ data: selectedProject }}
                           className={({ isActive }) =>
                             isActive
@@ -310,6 +330,7 @@ const Sidebar = () => {
                 </NavLink>
                 <NavLink
                   to="/site-inventory"
+                  onClick={toggleSidebar}
                   className={({ isActive }) =>
                     isActive ? "block py-1 !text-orange-500" : "block py-1"
                   }
@@ -318,6 +339,7 @@ const Sidebar = () => {
                 </NavLink>
                 <NavLink
                   to="/machinery-finances"
+                  onClick={toggleSidebar}
                   className={({ isActive }) =>
                     isActive ? "block py-1 !text-orange-500" : "block py-1"
                   }
