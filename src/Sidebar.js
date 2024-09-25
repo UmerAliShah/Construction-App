@@ -238,6 +238,7 @@ const Sidebar = ({ toggleSidebar }) => {
                         </NavLink>
                         <NavLink
                           to="/project-finances"
+                          state={{ data: selectedProject }}
                           onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive

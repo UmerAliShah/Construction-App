@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -11,26 +11,26 @@ import {
   Paper,
   Select,
   TextField,
-  Typography
-} from '@mui/material';
-import Pagination from '../../Pagination'; 
-import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
-import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
-import EditIcon from '@mui/icons-material/Edit';
-import DescriptionIcon from '@mui/icons-material/Description';
-import apiClient from '../../api/apiClient';
-import { fetchSites } from '../../Sidebar';
+  Typography,
+} from "@mui/material";
+import Pagination from "../../Pagination";
+import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
+import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
+import EditIcon from "@mui/icons-material/Edit";
+import DescriptionIcon from "@mui/icons-material/Description";
+import apiClient from "../../api/apiClient";
+import { fetchSites } from "../../Sidebar";
 
 const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
   width: 400,
-  bgcolor: 'background.paper',
+  bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
-  borderRadius: '8px',
+  borderRadius: "8px",
 };
 
 const IPCTracking = () => {
@@ -40,34 +40,36 @@ const IPCTracking = () => {
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState([]);
   const [newIpc, setNewIpc] = useState({
-    site: '',
-    ipcNumber: '',
-    ipcAmount: '',
-    status: '',
+    site: "",
+    ipcNumber: "",
+    ipcAmount: "",
+    status: "",
     document: null,
   });
 
   const [editOpen, setEditOpen] = useState(false);
-  const [editIpc, setEditIpc] = useState({
-    id: '',
-    site: '',
-    ipcNumber: '',
-    ipcAmount: '',
-    status: '',
+  const initialData = {
+    id: "",
+    site: "",
+    ipcNumber: "",
+    ipcAmount: "",
+    status: "",
     document: null,
-  });
+  };
+  const [editIpc, setEditIpc] = useState(initialData);
 
   useEffect(() => {
     fetchSites(setProjects);
-  }, [])
+  }, []);
 
   // Fetch data from the backend
   const fetchIPCData = async () => {
     try {
-      const response = await apiClient.get('/ipc'); // Your API endpoint for fetching IPC data
-      setIpcData(response.data); // Assuming the response contains the IPC data array
+      const response = await apiClient.get("/ipc");
+      setIpcData(response.data);
+      console.log(response.data, "test");
     } catch (error) {
-      console.error('Failed to fetch IPC data:', error);
+      console.error("Failed to fetch IPC data:", error);
     }
   };
 
@@ -124,14 +126,7 @@ const IPCTracking = () => {
 
   const handleEditClose = () => {
     setEditOpen(false);
-    setEditIpc({
-      id: '',
-      site: '',
-      ipcNumber: '',
-      ipcAmount: '',
-      status: '',
-      document: null,
-    });
+    setEditIpc(initialData);
   };
 
   const handleSubmit = async (e) => {
@@ -139,24 +134,21 @@ const IPCTracking = () => {
 
     // Create formData to handle file upload (document)
     const formData = new FormData();
-    formData.append('site', newIpc.site);
-    formData.append('ipcNumber', newIpc.ipcNumber);
-    formData.append('ipcAmount', newIpc.ipcAmount);
-    formData.append('status', newIpc.status);
+    formData.append("site", newIpc.site);
+    formData.append("ipcNumber", newIpc.ipcNumber);
+    formData.append("ipcAmount", newIpc.ipcAmount);
+    formData.append("status", newIpc.status);
     if (newIpc.document) {
-      formData.append('document', newIpc.document);
+      formData.append("document", newIpc.document);
     }
 
     try {
-      await apiClient.post('/ipc', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      handleClose(); // Close the modal after successful submission
-      fetchIPCData(); // Refetch the IPC data to update the table
+      await apiClient.post("/ipc", formData);
+      handleClose();
+      fetchIPCData();
+      setEditIpc(initialData);
     } catch (error) {
-      console.error('Error adding IPC record:', error);
+      console.error("Error adding IPC record:", error);
     }
   };
 
@@ -164,35 +156,37 @@ const IPCTracking = () => {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append('site', editIpc.site);
-    formData.append('ipcNumber', editIpc.ipcNumber);
-    formData.append('ipcAmount', editIpc.ipcAmount);
-    formData.append('status', editIpc.status);
+    formData.append("site", editIpc.site);
+    formData.append("ipcNumber", editIpc.ipcNumber);
+    formData.append("ipcAmount", editIpc.ipcAmount);
+    formData.append("status", editIpc.status);
     if (editIpc.document) {
-      formData.append('document', editIpc.document);
+      formData.append("document", editIpc.document);
     }
 
     try {
       await apiClient.put(`/ipc/${editIpc.id}`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
       handleEditClose();
       fetchIPCData();
     } catch (error) {
-      console.error('Error updating IPC record:', error);
+      console.error("Error updating IPC record:", error);
     }
   };
+  
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this IPC record?')) return;
+    if (!window.confirm("Are you sure you want to delete this IPC record?"))
+      return;
 
     try {
       await apiClient.delete(`/ipc/${id}`);
       setIpcData(ipcData.filter((ipc) => ipc._id !== id));
     } catch (error) {
-      console.error('Error deleting IPC record:', error);
+      console.error("Error deleting IPC record:", error);
     }
   };
 
@@ -217,15 +211,27 @@ const IPCTracking = () => {
             <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
               <Checkbox
                 color="primary"
-                indeterminate={selected.length > 0 && selected.length < ipcData.length}
-                checked={ipcData.length > 0 && selected.length === ipcData.length}
+                indeterminate={
+                  selected.length > 0 && selected.length < ipcData.length
+                }
+                checked={
+                  ipcData.length > 0 && selected.length === ipcData.length
+                }
                 onChange={handleSelectAll}
               />
-              <Typography className="flex-1 !font-semibold">Project Name</Typography>
-              <Typography className="flex-1 !font-semibold">IPC Number</Typography>
-              <Typography className="flex-1 !font-semibold">IPC Amount</Typography>
+              <Typography className="flex-1 !font-semibold">
+                Project Name
+              </Typography>
+              <Typography className="flex-1 !font-semibold">
+                IPC Number
+              </Typography>
+              <Typography className="flex-1 !font-semibold">
+                IPC Amount
+              </Typography>
               <Typography className="flex-1 !font-semibold">Status</Typography>
-              <Typography className="flex-1 !font-semibold">Documents</Typography>
+              <Typography className="flex-1 !font-semibold">
+                Documents
+              </Typography>
               <Typography className="!font-semibold">Action</Typography>
             </Box>
           </Grid>
@@ -239,14 +245,19 @@ const IPCTracking = () => {
                   checked={selected.includes(row._id)}
                   onChange={() => handleSelect(row._id)}
                 />
-                <Typography className="flex-1">{row.site.name}</Typography> {/* Assuming 'site' has a 'name' field */}
+                <Typography className="flex-1">{row.site.name}</Typography>{" "}
+                {/* Assuming 'site' has a 'name' field */}
                 <Typography className="flex-1">{row.ipcNumber}</Typography>
                 <Typography className="flex-1">{row.ipcAmount}</Typography>
                 <Typography className="flex-1">
                   <Button
                     variant="contained"
                     size="small"
-                    style={{ backgroundColor: '#ffcc80', color: '#f57c00', borderRadius: '16px' }}
+                    style={{
+                      backgroundColor: "#ffcc80",
+                      color: "#f57c00",
+                      borderRadius: "16px",
+                    }}
                   >
                     {row.status}
                   </Button>
@@ -254,7 +265,7 @@ const IPCTracking = () => {
                 <Typography className="flex-1">
                   <Button
                     variant="text"
-                    style={{ color: '#007bff', textTransform: 'none' }}
+                    style={{ color: "#007bff", textTransform: "none" }}
                     startIcon={<DescriptionIcon />}
                     href={row.document} // Assuming 'document' is a URL
                     target="_blank"
@@ -262,16 +273,35 @@ const IPCTracking = () => {
                     View Document
                   </Button>
                 </Typography>
-                <Box className="flex items-center justify-between rounded-lg border border-gray-300" sx={{ backgroundColor: '#f8f9fa' }}>
-                  <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
+                <Box
+                  className="flex items-center justify-between rounded-lg border border-gray-300"
+                  sx={{ backgroundColor: "#f8f9fa" }}
+                >
+                  <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
                     <VisibilityIcon />
                   </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="edit" sx={{ color: '#007bff' }} onClick={() => handleEditOpen(row)}>
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ borderColor: "#e0e0e0" }}
+                  />
+                  <IconButton
+                    aria-label="edit"
+                    sx={{ color: "#007bff" }}
+                    onClick={() => handleEditOpen(row)}
+                  >
                     <EditIcon />
                   </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }} onClick={() => handleDelete(row._id)}>
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ borderColor: "#e0e0e0" }}
+                  />
+                  <IconButton
+                    aria-label="delete"
+                    sx={{ color: "#dc3545" }}
+                    onClick={() => handleDelete(row._id)}
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </Box>
@@ -320,7 +350,9 @@ const IPCTracking = () => {
               label="IPC Number"
               fullWidth
               value={newIpc.ipcNumber}
-              onChange={(e) => setNewIpc({ ...newIpc, ipcNumber: e.target.value })}
+              onChange={(e) =>
+                setNewIpc({ ...newIpc, ipcNumber: e.target.value })
+              }
             />
 
             <TextField
@@ -329,7 +361,9 @@ const IPCTracking = () => {
               label="IPC Amount"
               fullWidth
               value={newIpc.ipcAmount}
-              onChange={(e) => setNewIpc({ ...newIpc, ipcAmount: e.target.value })}
+              onChange={(e) =>
+                setNewIpc({ ...newIpc, ipcAmount: e.target.value })
+              }
             />
 
             <Select
@@ -340,8 +374,8 @@ const IPCTracking = () => {
               displayEmpty
             >
               <MenuItem value="">Select Status</MenuItem>
-              <MenuItem value="In-Progress">In-Progress</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
+              <MenuItem value="in-proress">In-Progress</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
             </Select>
 
             <TextField
@@ -349,14 +383,20 @@ const IPCTracking = () => {
               id="document"
               fullWidth
               type="file"
-              onChange={(e) => setNewIpc({ ...newIpc, document: e.target.files[0] })}
+              onChange={(e) =>
+                setNewIpc({ ...newIpc, document: e.target.files[0] })
+              }
             />
 
             <div className="flex justify-end mt-4">
               <Button onClick={handleClose} color="error">
                 Cancel
               </Button>
-              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+              <Button
+                type="submit"
+                variant="contained"
+                className="!bg-[#FC8908]"
+              >
                 Add IPC Tracking
               </Button>
             </div>
@@ -403,7 +443,9 @@ const IPCTracking = () => {
               label="IPC Number"
               fullWidth
               value={editIpc.ipcNumber}
-              onChange={(e) => setEditIpc({ ...editIpc, ipcNumber: e.target.value })}
+              onChange={(e) =>
+                setEditIpc({ ...editIpc, ipcNumber: e.target.value })
+              }
             />
 
             <TextField
@@ -412,14 +454,18 @@ const IPCTracking = () => {
               label="IPC Amount"
               fullWidth
               value={editIpc.ipcAmount}
-              onChange={(e) => setEditIpc({ ...editIpc, ipcAmount: e.target.value })}
+              onChange={(e) =>
+                setEditIpc({ ...editIpc, ipcAmount: e.target.value })
+              }
             />
 
             <Select
               required
               fullWidth
               value={editIpc.status}
-              onChange={(e) => setEditIpc({ ...editIpc, status: e.target.value })}
+              onChange={(e) =>
+                setEditIpc({ ...editIpc, status: e.target.value })
+              }
               displayEmpty
             >
               <MenuItem value="">Select Status</MenuItem>
@@ -431,14 +477,20 @@ const IPCTracking = () => {
               id="edit-document"
               fullWidth
               type="file"
-              onChange={(e) => setEditIpc({ ...editIpc, document: e.target.files[0] })}
+              onChange={(e) =>
+                setEditIpc({ ...editIpc, document: e.target.files[0] })
+              }
             />
 
             <div className="flex justify-end mt-4">
               <Button onClick={handleEditClose} color="error">
                 Cancel
               </Button>
-              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+              <Button
+                type="submit"
+                variant="contained"
+                className="!bg-[#FC8908]"
+              >
                 Update IPC Tracking
               </Button>
             </div>
@@ -448,7 +500,11 @@ const IPCTracking = () => {
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
-          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            className="mr-2 pr-2"
+          >
             Showing
           </Typography>
           <Select
@@ -467,7 +523,7 @@ const IPCTracking = () => {
         </div>
         <Pagination
           count={Math.ceil(ipcData.length / entriesPerPage)}
-          onPageChange={(page) => console.log('Page:', page)}
+          onPageChange={(page) => console.log("Page:", page)}
         />
       </div>
     </div>

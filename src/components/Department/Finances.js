@@ -1,37 +1,53 @@
-import React, { useState } from 'react';
-import { Box, Button, Checkbox, Divider, Grid, IconButton, MenuItem, Modal, Paper, Select, TextField, Typography } from '@mui/material';
-import Pagination from '../../Pagination'; 
-import { ReactComponent as EditIcon } from '../Icons/edit.svg';
-import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
-import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Divider,
+  Grid,
+  IconButton,
+  MenuItem,
+  Modal,
+  Paper,
+  Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from "@mui/material";
 
-const demoData = Array(10).fill({
-  department: 'Finance',
-  name: 'Jacob Swanson',
-  amount: '$1500.00',
-  total: '$1500.00',
-});
+import Pagination from "../../Pagination";
+import { ReactComponent as EditIcon } from "../Icons/edit.svg";
+import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
+import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
+import apiClient from "../../api/apiClient";
+
 
 const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
   width: 400,
-  bgcolor: 'background.paper',
+  bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
-  borderRadius: '8px',
+  borderRadius: "8px",
 };
 
 const Finances = () => {
+  const [data, setData] = useState([]);
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelected(demoData.map((_, index) => index));
+      setSelected(data.map((_, index) => index));
     } else {
       setSelected([]);
     }
@@ -63,6 +79,18 @@ const Finances = () => {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  
+  const fetchFinance = async () => {
+    const response = await apiClient.get("/finance/all");
+    if (response.status === 200) {
+      setData(response.data);
+      console.log(response.data, "res");
+    }
+  };
+
+  useEffect(() => {
+    fetchFinance();
+  }, []);
 
   return (
     <div className="p-6">
@@ -81,63 +109,89 @@ const Finances = () => {
       </div>
 
       <Paper elevation={0} className="p-4">
-        <Grid container>
-          {/* Table Headings */}
-          <Grid item xs={12}>
-            <Box className="bg-white-50 font-semibold p-2 rounded-md flex items-center justify-between">
-              <Checkbox
-                color="primary"
-                indeterminate={selected.length > 0 && selected.length < demoData.length}
-                checked={demoData.length > 0 && selected.length === demoData.length}
-                onChange={handleSelectAll}
-              />
-              <Typography className="flex-1 !font-semibold">Department Type</Typography>
-              <Typography className="flex-1 !font-semibold">Name of Person Concerned</Typography>
-              <Typography className="flex-1 !font-semibold">Amount Given</Typography>
-              <Typography className="flex-1 !font-semibold">Total Given So Far</Typography>
-              <Typography className="!font-semibold">Action</Typography>
-            </Box>
-          </Grid>
-
-          {/* Table Rows */}
-          {demoData.map((row, index) => (
-            <Grid item xs={12} key={index}>
-              <Box
-                className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 py-2"
-              >
-                <Checkbox
-                  color="primary"
-                  checked={selected.indexOf(index) !== -1}
-                  onChange={() => handleSelect(index)}
-                />
-                <Typography className="flex-1">{row.department}</Typography>
-                <Typography className="flex-1">{row.name}</Typography>
-                <Typography className="flex-1">{row.amount}</Typography>
-                <Typography className="flex-1">{row.total}</Typography>
-                <Box
-                  className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: '#f8f9fa' }}>
-                  <IconButton aria-label="edit" sx={{ color: '#6c757d' }}>
-                    <EditIcon />
-                  </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    color="primary"
+                    indeterminate={
+                      selected.length > 0 && selected.length < data.length
+                    }
+                    checked={data.length > 0 && selected.length === data.length}
+                    onChange={handleSelectAll}
+                  />
+                </TableCell>
+                <TableCell>Department Type</TableCell>
+                <TableCell>Name of Person Concerned</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Amount Given</TableCell>
+                <TableCell>Total Given So Far</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Approved By</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.map((row, index) => (
+                <TableRow key={row.id}>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      checked={selected.indexOf(index) !== -1}
+                      onChange={() => handleSelect(index)}
+                    />
+                  </TableCell>
+                  <TableCell className="flex-1">{row.department}</TableCell>
+                  <TableCell className="flex-1">
+                    {row.nameOfConcerned?.name || "no name"}
+                  </TableCell>
+                  <TableCell className="flex-1">{row.partstype}</TableCell>
+                  <TableCell className="flex-1">{row.amount}</TableCell>
+                  <TableCell className="flex-1">{row.amount}</TableCell>
+                  <TableCell className="flex-1">
+                    <span
+                      style={{
+                        background: "#62912C47",
+                        borderRadius: "40px",
+                        padding: "10px",
+                      }}
+                    >
+                      {row.status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="flex-1">
+                    {row.approvedBy?.name || "Not Approved"}
+                  </TableCell>
+                  <TableCell
+                    className="flex items-center justify-between rounded-lg border border-gray-300"
+                    sx={{ backgroundColor: "#f8f9fa" }}
+                  >
+                    <IconButton aria-label="edit" sx={{ color: "#6c757d" }}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
+                      <VisibilityIcon />
+                    </IconButton>
+                    <IconButton aria-label="delete" sx={{ color: "#dc3545" }}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
-          <Typography variant="body2" color="textSecondary" className="mr-2 pr-4">
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            className="mr-2 pr-4"
+          >
             Showing
           </Typography>
           <Select
@@ -154,7 +208,10 @@ const Finances = () => {
             of 10,678 entries
           </Typography>
         </div>
-        <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
+        <Pagination
+          count={5}
+          onPageChange={(page) => console.log("Page:", page)}
+        />
       </div>
 
       {/* Modal for adding new finance */}
@@ -202,7 +259,13 @@ const Finances = () => {
               <Button onClick={handleClose} color="error">
                 Cancel
               </Button>
-              <Button type="submit" variant="contained" color="primary" className="!bg-[#FC8908]" sx={{ ml: 2 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                className="!bg-[#FC8908]"
+                sx={{ ml: 2 }}
+              >
                 Add Entry
               </Button>
             </div>
