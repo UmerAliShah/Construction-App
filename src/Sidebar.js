@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ReactComponent as DepartmentIcon } from "./components/Icons/department.svg";
 import { ReactComponent as OfficeIcon } from "./components/Icons/Office.svg";
 import { ReactComponent as ProjectsIcon } from "./components/Icons/Projects.svg";
 import { ReactComponent as MachinaryIcon } from "./components/Icons/Machinary.svg";
 import { ReactComponent as LogoutIcon } from "./components/Icons/Logout.svg";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { logout } from "./redux/counterSlice";
 import apiClient from "./api/apiClient";
 
@@ -23,31 +22,43 @@ export const fetchSites = async (setProjects) => {
 
 const Sidebar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
+  const location = useLocation(); // To track route change and reset the state if necessary
   const dispatch = useDispatch();
   const { role } = useSelector((state) => state.auth);
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [projects, setProjects] = useState([]);
+  const [openDropdown, setOpenDropdown] = useState(null); // To manage dropdown state
+  const [selectedProject, setSelectedProject] = useState(null); // To track the selected project
+  const [projects, setProjects] = useState([]); // To store fetched projects
+  const [activeProject, setActiveProject] = useState(null); // Track active project
 
-  const handleToggle = (section) => {
-    setOpenDropdown(openDropdown === section ? null : section);
-  };
-
+  // Fetch projects when the role changes
   useEffect(() => {
     fetchSites(setProjects);
   }, [role]);
 
+  // Track URL changes to reset the selected project when necessary
+  useEffect(() => {
+    setSelectedProject(null); // Reset the selected project when the route changes
+  }, []);
+
+  // Handle toggling dropdown sections
+  const handleToggle = (section) => {
+    setOpenDropdown(openDropdown === section ? null : section);
+  };
+
+  // Handle project selection and navigate to the project page
+  const handleProjectClick = (project) => {
+    setSelectedProject(project);
+    setActiveProject(project); // Set the clicked project as active
+    toggleSidebar(); // Close the sidebar on mobile/tablet views
+  };
+
+  // Handle user logout
   const handleLogout = () => {
-    console.log("ni chalya");
     dispatch(logout());
     navigate("/login");
   };
 
-  const handleProjectClick = (project) => {
-    setSelectedProject(selectedProject === project ? null : project);
-    toggleSidebar();
-  };
-
+  // Reusable dropdown icon with rotation animation
   const DropdownIcon = ({ isOpen }) => (
     <svg
       width="16"
@@ -107,12 +118,12 @@ const Sidebar = ({ toggleSidebar }) => {
               </div>
             )}
           </div>
-        ) : (
-          ""
-        )}
-        {role === "owner" ||
-        role === "owner_assistant" ||
-        role === "office_assistant" ? (
+        ) : null}
+
+        {/* Office Section */}
+        {(role === "owner" ||
+          role === "owner_assistant" ||
+          role === "office_assistant") && (
           <div>
             <div
               className="flex items-center cursor-pointer justify-between"
@@ -153,26 +164,16 @@ const Sidebar = ({ toggleSidebar }) => {
                 >
                   Employees
                 </NavLink>
-                <NavLink
-                  to="/office-progress"
-                  onClick={toggleSidebar}
-                  className={({ isActive }) =>
-                    isActive ? "block py-1 !text-orange-500" : "block py-1"
-                  }
-                >
-                  Progress
-                </NavLink>
               </div>
             )}
           </div>
-        ) : (
-          ""
         )}
 
-        {role === "owner" ||
-        role === "owner_assistant" ||
-        role === "site_head" ||
-        role === "site_assistant" ? (
+        {/* Projects Section */}
+        {(role === "owner" ||
+          role === "owner_assistant" ||
+          role === "site_head" ||
+          role === "site_assistant") && (
           <div>
             <div
               className="flex items-center cursor-pointer justify-between"
@@ -190,18 +191,18 @@ const Sidebar = ({ toggleSidebar }) => {
                   <div key={index}>
                     <NavLink
                       onClick={() => handleProjectClick(item)}
-                      className={({ isActive }) =>
-                        isActive ? "block py-1 !text-orange-500" : "block py-1"
+                      className={
+                        activeProject && activeProject.name === item.name
+                          ? "block py-1 !text-orange-500"
+                          : "block py-1"
                       }
                     >
                       {item.name}
                     </NavLink>
-
-                    {/* Render static links if the project is selected */}
                     {selectedProject && selectedProject.name === item.name && (
                       <div className="ml-4">
                         <NavLink
-                          to="/employees"
+                          to={`/${item._id}/employees`}
                           onClick={toggleSidebar}
                           state={{ data: selectedProject }}
                           className={({ isActive }) =>
@@ -213,7 +214,7 @@ const Sidebar = ({ toggleSidebar }) => {
                           Employees
                         </NavLink>
                         <NavLink
-                          to="/pending-finances"
+                        to={`/${item._id}/pending-finances`}
                           onClick={toggleSidebar}
                           state={{ data: selectedProject }}
                           className={({ isActive }) =>
@@ -225,7 +226,7 @@ const Sidebar = ({ toggleSidebar }) => {
                           Pending Finances
                         </NavLink>
                         <NavLink
-                          to="/vendors"
+                          to={`/${item._id}/vendors`}
                           onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
@@ -236,7 +237,7 @@ const Sidebar = ({ toggleSidebar }) => {
                           Vendors
                         </NavLink>
                         <NavLink
-                          to="/project-finances"
+                          to={`/${item._id}/project-finances`}
                           state={{ data: selectedProject }}
                           onClick={toggleSidebar}
                           className={({ isActive }) =>
@@ -248,7 +249,7 @@ const Sidebar = ({ toggleSidebar }) => {
                           Finances
                         </NavLink>
                         <NavLink
-                          to="/project-inventory"
+                          to={`/${item._id}/project-inventory`}
                           onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
@@ -259,7 +260,7 @@ const Sidebar = ({ toggleSidebar }) => {
                           Inventory
                         </NavLink>
                         <NavLink
-                          to="/project-progress"
+                          to={`/${item._id}/project-progress`}
                           onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
@@ -270,7 +271,7 @@ const Sidebar = ({ toggleSidebar }) => {
                           Progress
                         </NavLink>
                         <NavLink
-                          to="/supply-tracking"
+                          to={`/${item._id}/supply-tracking`}
                           onClick={toggleSidebar}
                           className={({ isActive }) =>
                             isActive
@@ -281,7 +282,7 @@ const Sidebar = ({ toggleSidebar }) => {
                           Supply Tracking
                         </NavLink>
                         <NavLink
-                          to="/salaries"
+                          to={`/${item._id}/salaries`}
                           onClick={toggleSidebar}
                           state={{ data: selectedProject }}
                           className={({ isActive }) =>
@@ -299,14 +300,13 @@ const Sidebar = ({ toggleSidebar }) => {
               </div>
             )}
           </div>
-        ) : (
-          ""
         )}
 
-        {role === "owner" ||
-        role === "owner_assistant" ||
-        role === "site_head" ||
-        role === "site_assistant" ? (
+        {/* Machinery Section */}
+        {(role === "owner" ||
+          role === "owner_assistant" ||
+          role === "site_head" ||
+          role === "site_assistant") && (
           <div>
             <div
               className="flex items-center cursor-pointer justify-between"
@@ -337,27 +337,18 @@ const Sidebar = ({ toggleSidebar }) => {
                 >
                   Site Inventory
                 </NavLink>
-                <NavLink
-                  to="/machinery-finances"
-                  onClick={toggleSidebar}
-                  className={({ isActive }) =>
-                    isActive ? "block py-1 !text-orange-500" : "block py-1"
-                  }
-                >
-                  Machinery Finances
-                </NavLink>
               </div>
             )}
           </div>
-        ) : (
-          ""
         )}
       </div>
+
+      {/* Logout Section */}
       <NavLink
         className={({ isActive }) =>
           isActive ? "ml-2 !text-orange-500" : "ml-2"
         }
-        onClick={() => handleLogout()}
+        onClick={handleLogout}
       >
         <div className="p-4 border-t flex items-center">
           <LogoutIcon className="!text-orange-500 w-6 h-6" />

@@ -51,6 +51,7 @@ const Employees = () => {
     }
   };
 
+  const isEmployeesPage = location.pathname === "/employees";
   useEffect(() => {
     if (selectedProject) {
       setEmployees([
@@ -58,8 +59,9 @@ const Employees = () => {
         selectedProject.siteHead,
         selectedProject.assistant,
       ]);
-      setLoading(false); // Set loading to false once employees are loaded
-    } else {
+      setLoading(false);
+    }
+    if (isEmployeesPage) {
       fetchUsers();
     }
   }, [selectedProject]);
@@ -124,7 +126,7 @@ const Employees = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-          Projects &gt; Employees
+          {isEmployeesPage?"Office" :"Projects"} &gt; Employees
         </Typography>
         <Button
           variant="contained"
@@ -145,7 +147,8 @@ const Employees = () => {
       <Paper elevation={0} className="p-4">
         {loading ? (
           <Box className="flex justify-center my-6">
-            <CircularProgress color="primary" /> {/* Circular progress shown while loading */}
+            <CircularProgress color="primary" />{" "}
+            {/* Circular progress shown while loading */}
           </Box>
         ) : (
           <TableContainer component={Paper} style={{ overflowX: "auto" }}>
@@ -156,10 +159,12 @@ const Employees = () => {
                     <Checkbox
                       color="primary"
                       indeterminate={
-                        selected.length > 0 && selected.length < employees.length
+                        selected.length > 0 &&
+                        selected.length < employees.length
                       }
                       checked={
-                        employees.length > 0 && selected.length === employees.length
+                        employees.length > 0 &&
+                        selected.length === employees.length
                       }
                       onChange={handleSelectAll}
                     />
@@ -230,7 +235,11 @@ const Employees = () => {
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
-          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            className="mr-2 pr-2"
+          >
             Showing
           </Typography>
           <Select
@@ -247,7 +256,10 @@ const Employees = () => {
             of {employees.length} entries
           </Typography>
         </div>
-        <Pagination count={5} onPageChange={(page) => console.log("Page:", page)} />
+        <Pagination
+          count={5}
+          onPageChange={(page) => console.log("Page:", page)}
+        />
       </div>
 
       {/* Confirmation Dialog */}

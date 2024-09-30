@@ -91,15 +91,16 @@ const AppContent = () => {
               <Route path="/office-progress" element={<OfficeProgress />} />
 
               <Route path="/employees" element={<Employees />} />
+              <Route path="/:id/employees" element={<Employees />} />
               <Route path="/add-employee" element={<AddNewEmployee />} />
               <Route path="/add-employee/:id" element={<AddNewEmployee />} />
-              <Route path="/pending-finances" element={<PendingFinance />} />
-              <Route path="/vendors" element={<Vendors />} />
-              <Route path="/project-finances" element={<ProjectFinances />} />
-              <Route path="/project-inventory" element={<Inventory />} />
-              <Route path="/project-progress" element={<ProjectProgress />} />
-              <Route path="/supply-tracking" element={<SupplyTracking />} />
-              <Route path="/salaries" element={<Salaries />} />
+              <Route path="/:id/pending-finances" element={<PendingFinance />} />
+              <Route path="/:id/vendors" element={<Vendors />} />
+              <Route path="/:id/project-finances" element={<ProjectFinances />} />
+              <Route path="/:id/project-inventory" element={<Inventory />} />
+              <Route path="/:id/project-progress" element={<ProjectProgress />} />
+              <Route path="/:id/supply-tracking" element={<SupplyTracking />} />
+              <Route path="/:id/salaries" element={<Salaries />} />
 
               <Route path="/company-inventory" element={<CompanyInventory />} />
               <Route path="/machinery-finances" element={<MachineryFinances />} />
