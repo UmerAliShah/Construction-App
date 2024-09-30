@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Checkbox,
   Divider,
   Grid,
   IconButton,
@@ -59,25 +58,6 @@ const Salaries = () => {
       ]);
     }
   }, []);
-  const handleSelect = (index) => {
-    const selectedIndex = selected.indexOf(index);
-    let newSelected = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, index);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-
-    setSelected(newSelected);
-  };
 
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
@@ -105,16 +85,6 @@ const Salaries = () => {
           {/* Table Headings */}
           <Grid item xs={12}>
             <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Checkbox
-                color="primary"
-                indeterminate={
-                  selected.length > 0 && selected.length < demoData.length
-                }
-                checked={
-                  demoData.length > 0 && selected.length === demoData.length
-                }
-                onChange={handleSelectAll}
-              />
               <Typography className="flex-1 !font-semibold">
                 Employee Name
               </Typography>
@@ -129,11 +99,6 @@ const Salaries = () => {
           {data.map((row, index) => (
             <Grid item xs={12} key={index}>
               <Box className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2">
-                <Checkbox
-                  color="primary"
-                  checked={selected.indexOf(index) !== -1}
-                  onChange={() => handleSelect(index)}
-                />
                 <Typography className="flex-1">{row.name}</Typography>
                 <Typography className="flex-1">
                   <span

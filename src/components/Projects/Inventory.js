@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Checkbox,
   IconButton,
   Typography,
   Select,
@@ -61,34 +60,6 @@ const Inventory = () => {
   const [open, setOpen] = useState(false);
   const [image, setImage] = useState(null);
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelected(demoData.map((_, index) => index));
-    } else {
-      setSelected([]);
-    }
-  };
-
-  const handleSelect = (index) => {
-    const selectedIndex = selected.indexOf(index);
-    let newSelected = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, index);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-
-    setSelected(newSelected);
-  };
-
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
   };
@@ -128,14 +99,6 @@ const Inventory = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  color="primary"
-                  indeterminate={selected.length > 0 && selected.length < demoData.length}
-                  checked={demoData.length > 0 && selected.length === demoData.length}
-                  onChange={handleSelectAll}
-                />
-              </TableCell>
               <TableCell><Typography className="!font-semibold">Type of Product</Typography></TableCell>
               <TableCell><Typography className="!font-semibold">Amount Available</Typography></TableCell>
               <TableCell><Typography className="!font-semibold">More Needed</Typography></TableCell>
@@ -146,13 +109,6 @@ const Inventory = () => {
           <TableBody>
             {demoData.map((row, index) => (
               <TableRow key={index} selected={selected.indexOf(index) !== -1}>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    color="primary"
-                    checked={selected.indexOf(index) !== -1}
-                    onChange={() => handleSelect(index)}
-                  />
-                </TableCell>
                 <TableCell>{row.product}</TableCell>
                 <TableCell>{row.amountAvailable}</TableCell>
                 <TableCell>
@@ -171,7 +127,7 @@ const Inventory = () => {
                 </TableCell>
                 <TableCell>
                   <Box
-                    className="flex items-center justify-between rounded-lg border border-gray-300"
+                    className="flex items-center justify-around rounded-lg border border-gray-300"
                     sx={{ backgroundColor: '#f8f9fa' }}>
                     <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
                       <VisibilityIcon />

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Checkbox,
   IconButton,
   Typography,
   Paper,
@@ -91,34 +90,6 @@ const Vendors = () => {
     }
   };
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelected(vendors.map((_, index) => index));
-    } else {
-      setSelected([]);
-    }
-  };
-
-  const handleSelect = (index) => {
-    const selectedIndex = selected.indexOf(index);
-    let newSelected = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, index);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-
-    setSelected(newSelected);
-  };
-
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
   };
@@ -169,14 +140,6 @@ const Vendors = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      color="primary"
-                      indeterminate={selected.length > 0 && selected.length < vendors.length}
-                      checked={vendors.length > 0 && selected.length === vendors.length}
-                      onChange={handleSelectAll}
-                    />
-                  </TableCell>
                   <TableCell>Vendor Name</TableCell>
                   <TableCell>Email</TableCell>
                   <TableCell>Phone Number</TableCell>
@@ -187,13 +150,6 @@ const Vendors = () => {
               <TableBody>
                 {vendors.map((vendor, index) => (
                   <TableRow key={vendor.id} hover>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={selected.indexOf(index) !== -1}
-                        onChange={() => handleSelect(index)}
-                      />
-                    </TableCell>
                     <TableCell>{vendor.name}</TableCell>
                     <TableCell>{vendor.email}</TableCell>
                     <TableCell>{vendor.phone}</TableCell>
