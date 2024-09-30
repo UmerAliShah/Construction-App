@@ -44,10 +44,10 @@ const Finances = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
-  const [isEdit, setIsEdit] = useState(false); // To track if it's an edit operation
-  const [editData, setEditData] = useState(null); // Store data to edit
-  const [loading, setLoading] = useState(false); // Loader state for fetching data
-  const [submitLoading, setSubmitLoading] = useState(false); // Loader for submitting or updating data
+  const [isEdit, setIsEdit] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [formData, setFormData] = useState({
     department: "",
     nameOfConcerned: "",
@@ -104,7 +104,7 @@ const Finances = () => {
   // Fetch finance data with loader
   const fetchFinance = async () => {
     setLoading(true);
-    const response = await apiClient.get("/finance/all");
+    const response = await apiClient.get("/finance/allUser");
     if (response.status === 200) {
       setData(response.data);
       setFilteredData(response.data);
@@ -221,13 +221,11 @@ const Finances = () => {
                       onChange={handleSelectAll}
                     />
                   </TableCell>
-                  <TableCell>Department Type</TableCell>
+                  {/* <TableCell>Department Type</TableCell> */}
                   <TableCell>Name of Person Concerned</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Amount Given</TableCell>
+                  <TableCell>Role</TableCell>
+                  <TableCell>Employee Id</TableCell>
                   <TableCell>Total Given So Far</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Approved By</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -241,13 +239,11 @@ const Finances = () => {
                         onChange={() => handleSelect(index)}
                       />
                     </TableCell>
-                    <TableCell>{row.department}</TableCell>
-                    <TableCell>{row.nameOfConcerned?.name || "no name"}</TableCell>
-                    <TableCell>{row.partstype}</TableCell>
-                    <TableCell>{row.amount}</TableCell>
-                    <TableCell>{row.totalGiven || row.amount}</TableCell>
-                    <TableCell>{row.status}</TableCell>
-                    <TableCell>{row.approvedBy?.name || "Not Approved"}</TableCell>
+                    {/* <TableCell>{row.department}</TableCell> */}
+                    <TableCell>{row.nameOfConcerned || "no name"}</TableCell>
+                    <TableCell>{row.role}</TableCell>
+                    <TableCell>{row.employeeId}</TableCell>
+                    <TableCell>{row.totalAmount}</TableCell>
                     <TableCell>
                     <Box
                         className="flex items-center justify-between rounded-lg border border-gray-300"
