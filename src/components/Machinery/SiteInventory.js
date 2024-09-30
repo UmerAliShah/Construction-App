@@ -55,7 +55,7 @@ const SiteInventory = () => {
     // Fetching data from the backend
     const fetchData = async () => {
       try {
-        const response = await apiClient.get('/mechinaries');
+        const response = await apiClient.get('/machinery');
         setData(response.data);
         setLoading(false);
       } catch (error) {

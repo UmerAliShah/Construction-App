@@ -168,6 +168,17 @@ const Finances = () => {
     setOpen(true);
   };
 
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this entry?')) {
+      try {
+        await apiClient.delete(`/finance/delete/${id}`); // API call to delete
+        fetchFinance(); // Refresh the finance data after deletion
+      } catch (error) {
+        console.error('Error deleting finance entry', error);
+      }
+    }
+  };  
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4 flex-col md:flex-row">
@@ -256,7 +267,7 @@ const Finances = () => {
                             <VisibilityIcon />
                         </IconButton>
                         <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                        <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                        <IconButton aria-label="delete" onClick={() => handleDelete(row.id)} sx={{ color: '#dc3545' }}>
                             <DeleteIcon />
                         </IconButton>
                     </Box>
