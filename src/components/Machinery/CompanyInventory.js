@@ -169,7 +169,7 @@ const CompanyInventory = () => {
                         {row.document}
                       </Button>
                     </TableCell>
-                    <TableCell>{row.workingOn.name}</TableCell>
+                    <TableCell>{row.workingOn?.name}</TableCell>
                     <TableCell>{row.trackingNumber}</TableCell>
                     <TableCell>
                       <Box

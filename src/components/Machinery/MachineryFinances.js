@@ -1,29 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
   Divider,
-  Grid,
   IconButton,
   MenuItem,
   Modal,
   Paper,
   Select,
   TextField,
-  Typography
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  CircularProgress
 } from '@mui/material';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 import DescriptionIcon from '@mui/icons-material/Description';
 import Pagination from '../../Pagination'; 
-
-const demoData = Array(10).fill({
-  referenceNumber: '258963147',
-  partsDemandedType: 'In-Progress',
-  document: 'Site Inspection.pdf',
-  amount: '$15000.00',
-  date: '26 July, 2024',
-});
 
 const style = {
   position: 'absolute',
@@ -48,10 +46,45 @@ const MachineryFinance = () => {
     document: null,
     date: ''
   });
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Simulate data fetching
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Replace this with your actual data fetching logic
+        // For demonstration, we're using a timeout to simulate an API call
+        const response = await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve([
+              {
+                referenceNumber: '258963147',
+                partsDemandedType: 'In-Progress',
+                document: 'Site Inspection.pdf',
+                amount: '$15000.00',
+                date: '26 July, 2024',
+              },
+              // Add more data objects as needed
+            ]);
+          }, 2000);
+        });
+        setData(response);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        // Handle error appropriately
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelected(demoData.map((_, index) => index));
+      setSelected(data.map((_, index) => index));
     } else {
       setSelected([]);
     }
@@ -89,57 +122,66 @@ const MachineryFinance = () => {
           onClick={handleOpen}
           sx={{ textTransform: 'none', backgroundColor: '#FC8908', fontWeight: '400', borderRadius: '8px' }}
         >
-          + Create New Project
+          + Create New Finance
         </Button>
       </Box>
+      
       <Paper elevation={0} className="p-4">
-        <Grid container>
-          {/* Table Headings */}
-          <Grid item xs={12}>
-            <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Typography className="flex-1 !font-semibold">Machinery Reference Number</Typography>
-              <Typography className="flex-1 !font-semibold">Parts Demanded Type</Typography>
-              <Typography className="flex-1 !font-semibold">Picture/Documents</Typography>
-              <Typography className="flex-1 !font-semibold">Amount</Typography>
-              <Typography className="flex-1 !font-semibold">Date</Typography>
-              <Typography className="!font-semibold">Action</Typography>
-            </Box>
-          </Grid>
-
-          {/* Table Rows */}
-          {demoData.map((row, index) => (
-            <Grid item xs={12} key={index}>
-              <Box
-                className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2"
-              >
-                <Typography className="flex-1">{row.referenceNumber}</Typography>
-                <Typography className="flex-1"></Typography>
-                <Typography className="flex-1">
-                  <Button
-                    variant="text"
-                    style={{ color: '#007bff', textTransform: 'none' }}
-                    startIcon={<DescriptionIcon />}
-                  >
-                    {row.document}
-                  </Button>
-                </Typography>
-                <Typography className="flex-1">{row.amount}</Typography>
-                <Typography className="flex-1">{row.date}</Typography>
-                <Box
-                  className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: '#f8f9fa' }}>
-                  <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+        {loading ? (
+          <Box className="flex justify-center items-center" style={{ minHeight: '200px' }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><Typography className="!font-semibold">Machinery Reference Number</Typography></TableCell>
+                  <TableCell><Typography className="!font-semibold">Parts Demanded Type</Typography></TableCell>
+                  <TableCell><Typography className="!font-semibold">Picture/Documents</Typography></TableCell>
+                  <TableCell><Typography className="!font-semibold">Amount</Typography></TableCell>
+                  <TableCell><Typography className="!font-semibold">Date</Typography></TableCell>
+                  <TableCell><Typography className="!font-semibold">Action</Typography></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {data.map((row, index) => (
+                  <TableRow key={index} hover>
+                    <TableCell>{row.referenceNumber}</TableCell>
+                    <TableCell>{row.partsDemandedType}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="text"
+                        style={{ color: '#007bff', textTransform: 'none' }}
+                        startIcon={<DescriptionIcon />}
+                        href={`path/to/documents/${row.document}`} // Update the path as needed
+                        target="_blank"
+                      >
+                        {row.document}
+                      </Button>
+                    </TableCell>
+                    <TableCell>{row.amount}</TableCell>
+                    <TableCell>{row.date}</TableCell>
+                    <TableCell>
+                      <Box
+                        className="flex items-center justify-between rounded-lg border border-gray-300"
+                        sx={{ backgroundColor: '#f8f9fa' }}
+                      >
+                        <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
+                          <VisibilityIcon />
+                        </IconButton>
+                        <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
+                        <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Paper>
 
       <Modal
@@ -150,7 +192,7 @@ const MachineryFinance = () => {
       >
         <Box sx={style}>
           <Typography id="new-project-modal-title" variant="h6" component="h2">
-            Create New Project
+            Create New Finance
           </Typography>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <TextField
@@ -175,11 +217,17 @@ const MachineryFinance = () => {
               onChange={handleChange}
             />
             <TextField
-              name="document"
-              type="file"
-              fullWidth
-              onChange={handleFileChange}
+                name="document"
+                type="file"
+                fullWidth
+                onChange={handleChange}
+                required
             />
+            {newProject.document && (
+              <Typography variant="body2">
+                Selected File: {newProject.document.name}
+              </Typography>
+            )}
             <TextField
               name="date"
               label="Date"
@@ -217,7 +265,8 @@ const MachineryFinance = () => {
             <MenuItem value={50}>50</MenuItem>
           </Select>
           <Typography variant="body2" color="textSecondary">
-            of 10,678 entries
+            of {/* Update this to reflect actual total entries */}
+            {data.length} entries
           </Typography>
         </div>
         <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
