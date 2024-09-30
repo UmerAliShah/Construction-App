@@ -22,7 +22,6 @@ import {
 import Pagination from "../../Pagination";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
-import EditIcon from "@mui/icons-material/Edit";
 import DescriptionIcon from "@mui/icons-material/Description";
 import apiClient from "../../api/apiClient";
 import { fetchSites } from "../../Sidebar";
@@ -44,7 +43,9 @@ const IPCTracking = () => {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [ipcData, setIpcData] = useState([]);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [editOpen, setEditOpen] = useState(false); // To handle Edit modal
+  const [loading, setLoading] = useState(false); // Loader for fetching data
+  const [submitLoading, setSubmitLoading] = useState(false); // Loader state for Add/Update submission
   const [projects, setProjects] = useState([]);
   const [newIpc, setNewIpc] = useState({
     site: "",
@@ -53,17 +54,16 @@ const IPCTracking = () => {
     status: "",
     document: null,
   });
-
-  const [editOpen, setEditOpen] = useState(false);
-  const initialData = {
+  const [editIpc, setEditIpc] = useState({
     id: "",
     site: "",
     ipcNumber: "",
     ipcAmount: "",
     status: "",
     document: null,
-  };
-  const [editIpc, setEditIpc] = useState(initialData);
+  }); // State for Edit IPC
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false); // State for delete confirmation modal
+  const [deleteId, setDeleteId] = useState(null); // Hold the ID of the record to be deleted
 
   useEffect(() => {
     fetchSites(setProjects);
@@ -121,25 +121,35 @@ const IPCTracking = () => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const handleEditOpen = (ipc) => {
+  const handleEditOpen = (row) => {
     setEditIpc({
-      id: ipc._id,
-      site: ipc.site._id,
-      ipcNumber: ipc.ipcNumber,
-      ipcAmount: ipc.ipcAmount,
-      status: ipc.status,
-      document: null,
+      id: row._id,
+      site: row.site._id,
+      ipcNumber: row.ipcNumber,
+      ipcAmount: row.ipcAmount,
+      status: row.status,
+      document: null, // You can add document logic if necessary
     });
     setEditOpen(true);
   };
 
   const handleEditClose = () => {
     setEditOpen(false);
-    setEditIpc(initialData);
+  };
+
+  const handleDeleteModalOpen = (id) => {
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteModalClose = () => {
+    setDeleteId(null);
+    setDeleteModalOpen(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitLoading(true);
 
     // Create formData to handle file upload (document)
     const formData = new FormData();
@@ -155,14 +165,23 @@ const IPCTracking = () => {
       await apiClient.post("/ipc", formData);
       handleClose();
       fetchIPCData();
-      setEditIpc(initialData);
+      setSubmitLoading(false);
+      setNewIpc({
+        site: "",
+        ipcNumber: "",
+        ipcAmount: "",
+        status: "",
+        document: null,
+      });
     } catch (error) {
       console.error("Error adding IPC record:", error);
+      setSubmitLoading(false);
     }
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    setSubmitLoading(true);
 
     const formData = new FormData();
     formData.append("site", editIpc.site);
@@ -174,25 +193,21 @@ const IPCTracking = () => {
     }
 
     try {
-      await apiClient.put(`/ipc/${editIpc.id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await apiClient.put(`/ipc/${editIpc.id}`, formData);
       handleEditClose();
       fetchIPCData();
+      setSubmitLoading(false);
     } catch (error) {
       console.error("Error updating IPC record:", error);
+      setSubmitLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this IPC record?"))
-      return;
-
+  const handleDelete = async () => {
     try {
-      await apiClient.delete(`/ipc/${id}`);
-      setIpcData(ipcData.filter((ipc) => ipc._id !== id));
+      await apiClient.delete(`/ipc/${deleteId}`);
+      setIpcData(ipcData.filter((ipc) => ipc._id !== deleteId));
+      handleDeleteModalClose();
     } catch (error) {
       console.error("Error deleting IPC record:", error);
     }
@@ -281,17 +296,17 @@ const IPCTracking = () => {
                       </Button>
                     </TableCell>
                     <TableCell>
-                        <Box
-                            className="flex items-center justify-around rounded-lg border border-gray-300"
-                            sx={{ backgroundColor: '#f8f9fa' }}>
-                            <IconButton aria-label="edit" onClick={() => handleEditOpen(row)} sx={{ color: '#6c757d' }}>
-                                <VisibilityIcon />
-                            </IconButton>
-                            <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                            <IconButton aria-label="delete" onClick={() => handleDelete()} sx={{ color: '#dc3545' }}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </Box>
+                    <Box
+                        className="flex items-center justify-between rounded-lg border border-gray-300"
+                        sx={{ backgroundColor: '#f8f9fa' }}>
+                        <IconButton aria-label="edit" onClick={() => handleEditOpen(row)} sx={{ color: '#6c757d' }}>
+                            <VisibilityIcon />
+                        </IconButton>
+                        <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
+                        <IconButton aria-label="delete" onClick={() => handleDeleteModalOpen(row._id)} sx={{ color: '#dc3545' }}>
+                            <DeleteIcon />
+                        </IconButton>
+                    </Box>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -364,8 +379,8 @@ const IPCTracking = () => {
               displayEmpty
             >
               <MenuItem value="">Select Status</MenuItem>
-              <MenuItem value="in-proress">In-Progress</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
+              <MenuItem value="In-Progress">In-Progress</MenuItem>
+              <MenuItem value="Completed">Completed</MenuItem>
             </Select>
 
             <TextField
@@ -386,8 +401,9 @@ const IPCTracking = () => {
                 type="submit"
                 variant="contained"
                 className="!bg-[#FC8908]"
+                disabled={submitLoading}
               >
-                Add IPC Tracking
+                {submitLoading ? <CircularProgress size={20} /> : "Add IPC Tracking"}
               </Button>
             </div>
           </Box>
@@ -480,11 +496,43 @@ const IPCTracking = () => {
                 type="submit"
                 variant="contained"
                 className="!bg-[#FC8908]"
+                disabled={submitLoading}
               >
-                Update IPC Tracking
+                {submitLoading ? <CircularProgress size={20} /> : "Update IPC Tracking"}
               </Button>
             </div>
           </Box>
+        </Box>
+      </Modal>
+
+      {/* Modal for confirming delete */}
+      <Modal
+        open={deleteModalOpen}
+        onClose={handleDeleteModalClose}
+        aria-labelledby="delete-modal-title"
+        aria-describedby="delete-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="delete-modal-title" variant="h6" component="h2">
+            Confirm Delete
+          </Typography>
+          <Typography id="delete-modal-description" className="mt-2">
+            Are you sure you want to delete this IPC tracking record? This action
+            cannot be undone.
+          </Typography>
+          <div className="flex justify-end mt-4">
+            <Button onClick={handleDeleteModalClose} color="error">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              variant="contained"
+              color="primary"
+              sx={{ ml: 2 }}
+            >
+              Delete
+            </Button>
+          </div>
         </Box>
       </Modal>
 

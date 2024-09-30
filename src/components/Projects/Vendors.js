@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Checkbox,
   IconButton,
   Typography,
-  Grid,
   Paper,
   Select,
   MenuItem,
   Divider, Avatar,
   Button, TextField, Modal,
+  CircularProgress,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from '@mui/material';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 import { styled } from '@mui/system';
-import Pagination from '../../Pagination'; 
+import Pagination from '../../Pagination';
+import apiClient from '../../api/apiClient';
 
 const style = {
   position: 'absolute',
@@ -29,28 +36,46 @@ const style = {
 };
 
 const ImageUploadBox = styled(Box)(({ theme }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: theme.spacing(2),
-    border: `1px dashed grey`,
-    borderRadius: '8px',
-    cursor: 'pointer',
-    marginBottom: theme.spacing(2),
-  }));
-
-const demoData = Array(10).fill({
-  name: 'Jacob Swanson',
-  email: 'jacobswanson@email.com',
-  phone: '555-123-4567',
-  status: 'Active',
-});
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  padding: theme.spacing(2),
+  border: `1px dashed grey`,
+  borderRadius: '8px',
+  cursor: 'pointer',
+  marginBottom: theme.spacing(2),
+}));
 
 const Vendors = () => {
+  const [vendors, setVendors] = useState([]);
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [newVendor, setNewVendor] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    contactNumber: '',
+  });
+
+  useEffect(() => {
+    fetchVendors();
+  }, []);
+
+  const fetchVendors = async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get('/users/vendors');
+      setVendors(response.data);
+    } catch (error) {
+      console.error('Error fetching vendors', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -68,13 +93,10 @@ const Vendors = () => {
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelected(demoData.map((_, index) => index));
+      setSelected(vendors.map((_, index) => index));
     } else {
       setSelected([]);
     }
-  };
-  const handleClick = () => {
-    handleOpen();
   };
 
   const handleSelect = (index) => {
@@ -101,73 +123,96 @@ const Vendors = () => {
     setEntriesPerPage(event.target.value);
   };
 
+  const handleNewVendorChange = (event) => {
+    const { name, value } = event.target;
+    setNewVendor((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCreateVendor = async (event) => {
+    event.preventDefault();
+    try {
+      await apiClient.post('/vendors', newVendor);
+      fetchVendors();
+      handleClose();
+    } catch (error) {
+      console.error('Error creating vendor', error);
+    }
+  };
+
   return (
     <div className="p-6">
-        <div className="flex justify-between items-center mb-4">
-            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-                Projects &gt; Vendors
-            </Typography>
-            <Button
-                    variant="contained"
-                    color="warning"
-                    className="mb-4 !bg-[#FC8908]"
-                    style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
-                    onClick={handleClick}
-                >
-                    + Add New Vendor
-                </Button>
-        </div>
-      <Paper elevation={0} className="p-4">
-        <Grid container>
-          {/* Table Headings */}
-          <Grid item xs={12}>
-            <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Checkbox
-                color="primary"
-                indeterminate={selected.length > 0 && selected.length < demoData.length}
-                checked={demoData.length > 0 && selected.length === demoData.length}
-                onChange={handleSelectAll}
-              />
-              <Typography className="flex-1 !font-semibold">Vendor Name</Typography>
-              <Typography className="flex-1 !font-semibold">Email</Typography>
-              <Typography className="flex-1 !font-semibold">Phone Number</Typography>
-              <Typography className="flex-1 !font-semibold">Status</Typography>
-              <Typography className="!font-semibold">Action</Typography>
-            </Box>
-          </Grid>
+      <div className="flex justify-between items-center mb-4">
+        <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+          Projects &gt; Vendors
+        </Typography>
+        <Button
+          variant="contained"
+          color="warning"
+          className="mb-4 !bg-[#FC8908]"
+          style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
+          onClick={handleOpen}
+        >
+          + Add New Vendor
+        </Button>
+      </div>
 
-          {/* Table Rows */}
-          {demoData.map((row, index) => (
-            <Grid item xs={12} key={index}>
-              <Box
-                className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2"
-              >
-                <Checkbox
-                  color="primary"
-                  checked={selected.indexOf(index) !== -1}
-                  onChange={() => handleSelect(index)}
-                />
-                <Typography className="flex-1">{row.name}</Typography>
-                <Typography className="flex-1">{row.email}</Typography>
-                <Typography className="flex-1">{row.phone}</Typography>
-                <Typography className="flex-1">
-                  <span style={{ background: row.status === 'Active' ? '#62912C47' : 'red', borderRadius: '30px', padding: '10px'  }}>{row.status}</span>
-                </Typography>
-                <Box
-                  className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: '#f8f9fa' }}>
-                  <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+      <Paper elevation={0} className="p-4">
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" height="100px">
+            <CircularProgress />
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      indeterminate={selected.length > 0 && selected.length < vendors.length}
+                      checked={vendors.length > 0 && selected.length === vendors.length}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                  <TableCell>Vendor Name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Phone Number</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {vendors.map((vendor, index) => (
+                  <TableRow key={vendor.id} hover>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        color="primary"
+                        checked={selected.indexOf(index) !== -1}
+                        onChange={() => handleSelect(index)}
+                      />
+                    </TableCell>
+                    <TableCell>{vendor.name}</TableCell>
+                    <TableCell>{vendor.email}</TableCell>
+                    <TableCell>{vendor.phone}</TableCell>
+                    <TableCell>{vendor.status}</TableCell>
+                    <TableCell>
+                      <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
+                        <VisibilityIcon />
+                      </IconButton>
+                      <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
+                      <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Paper>
 
       <Modal
@@ -185,6 +230,7 @@ const Vendors = () => {
             noValidate
             autoComplete="off"
             className="flex flex-col gap-4 mt-4"
+            onSubmit={handleCreateVendor}
           >
             <ImageUploadBox>
               <Avatar
@@ -209,28 +255,43 @@ const Vendors = () => {
               required
               id="vendor-name"
               label="Vendor Name"
+              name="name"
+              value={newVendor.name}
+              onChange={handleNewVendorChange}
               fullWidth
             />
             <TextField
               required
               id="email"
               label="Email"
+              name="email"
+              value={newVendor.email}
+              onChange={handleNewVendorChange}
               fullWidth
             />
             <TextField
               required
               id="phone"
               label="Phone"
+              name="phone"
+              value={newVendor.phone}
+              onChange={handleNewVendorChange}
               fullWidth
             />
             <TextField
               id="address"
               label="Address"
+              name="address"
+              value={newVendor.address}
+              onChange={handleNewVendorChange}
               fullWidth
             />
             <TextField
               id="contact-number"
               label="Contact Number"
+              name="contactNumber"
+              value={newVendor.contactNumber}
+              onChange={handleNewVendorChange}
               fullWidth
             />
             <div className="flex self-end mt-4">

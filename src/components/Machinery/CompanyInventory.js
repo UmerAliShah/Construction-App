@@ -1,30 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   Divider,
-  Grid,
   IconButton,
   MenuItem,
   Modal,
   Paper,
   Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography
 } from '@mui/material';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
 import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 import DescriptionIcon from '@mui/icons-material/Description';
-import Pagination from '../../Pagination'; 
-
-const demoData = Array(10).fill({
-  machineryName: 'Excavators',
-  type: 'Loaders',
-  document: 'Site Inspection.pdf',
-  trackingNumber: '258963147',
-  working: 'Yes',
-});
+import Pagination from '../../Pagination';
+import apiClient from '../../api/apiClient';
 
 const style = {
   position: 'absolute',
@@ -42,10 +41,35 @@ const CompanyInventory = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState([]);
+  const [formData, setFormData] = useState({
+    machineryName: '',
+    type: '',
+    trackingNumber: '',
+    working: '',
+    document: null,
+  });
+
+  useEffect(() => {
+    // Fetch data from the backend
+    const fetchData = async () => {
+      try {
+        const response = await apiClient.get('/mechinaries');
+        setData(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelected(demoData.map((_, index) => index));
+      setSelected(data.map((_, index) => index));
     } else {
       setSelected([]);
     }
@@ -78,78 +102,127 @@ const CompanyInventory = () => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleFileChange = (event) => {
+    setFormData({
+      ...formData,
+      document: event.target.files[0],
+    });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formDataToSend = new FormData();
+    formDataToSend.append('machineryName', formData.machineryName);
+    formDataToSend.append('type', formData.type);
+    formDataToSend.append('trackingNumber', formData.trackingNumber);
+    formDataToSend.append('working', formData.working);
+    formDataToSend.append('document', formData.document);
+
+    try {
+      const response = await apiClient.post('/mechinaries', formDataToSend);
+      console.log('Inventory added:', response.data);
+      setOpen(false);
+      // Optionally refetch the data after adding the inventory
+      const newData = await apiClient.get('/mechinaries');
+      setData(newData.data);
+    } catch (error) {
+      console.error('Error adding inventory:', error);
+    }
+  };
+
   return (
     <Box className="p-6">
-        <Box className="flex justify-between items-center mb-4">
-            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-                Machinery &gt; Company Inventory
-            </Typography>
-            <Button
-                variant="contained"
-                className="mb-4 !bg-[#FC8908]"
-                onClick={handleOpen}
-            >
-                + Add Company Inventory
-            </Button>
-        </Box>
+      <Box className="flex justify-between items-center mb-4">
+        <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+          Machinery &gt; Company Inventory
+        </Typography>
+        <Button
+          variant="contained"
+          className="mb-4 !bg-[#FC8908]"
+          onClick={handleOpen}
+        >
+          + Add Company Inventory
+        </Button>
+      </Box>
       <Paper elevation={0} className="p-4">
-        <Grid container>
-        <Grid item xs={12}>
-            <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Checkbox
-                color="primary"
-                indeterminate={selected.length > 0 && selected.length < demoData.length}
-                checked={demoData.length > 0 && selected.length === demoData.length}
-                onChange={handleSelectAll}
-              />
-              <Typography className="flex-1 !font-semibold">Machinery Name</Typography>
-              <Typography className="flex-1 !font-semibold">Type</Typography>
-              <Typography className="flex-1 !font-semibold">Picture/Documents</Typography>
-              <Typography className="flex-1 !font-semibold">Working</Typography>
-              <Typography className="flex-1 !font-semibold">Tracking Number</Typography>
-              <Typography className="!font-semibold">Action</Typography>
-            </Box>
-          </Grid>
-
-          {/* Table Rows */}
-          {demoData.map((row, index) => (
-            <Grid item xs={12} key={index}>
-              <Box
-                className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2"
-              >
-                <Checkbox
-                  color="primary"
-                  checked={selected.indexOf(index) !== -1}
-                  onChange={() => handleSelect(index)}
-                />
-                <Typography className="flex-1">{row.machineryName}</Typography>
-                <Typography className="flex-1">{row.type}</Typography>
-                <Typography className="flex-1">
-                  <Button
-                    variant="text"
-                    style={{ color: '#007bff', textTransform: 'none' }}
-                    startIcon={<DescriptionIcon />}
-                  >
-                    {row.document}
-                  </Button>
-                </Typography>
-                <Typography className="flex-1"></Typography>
-                <Typography className="flex-1">{row.trackingNumber}</Typography>
-                <Box
-                  className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: '#f8f9fa' }}>
-                  <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+        <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+          <Table stickyHeader aria-label="company inventory table">
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    color="primary"
+                    indeterminate={selected.length > 0 && selected.length < data.length}
+                    checked={data.length > 0 && selected.length === data.length}
+                    onChange={handleSelectAll}
+                  />
+                </TableCell>
+                <TableCell>Machinery Name</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Picture/Documents</TableCell>
+                <TableCell>Working</TableCell>
+                <TableCell>Tracking Number</TableCell>
+                <TableCell>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    <CircularProgress />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                data.map((row, index) => (
+                  <TableRow key={index} hover>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        color="primary"
+                        checked={selected.indexOf(index) !== -1}
+                        onChange={() => handleSelect(index)}
+                      />
+                    </TableCell>
+                    <TableCell>{row.machineryName}</TableCell>
+                    <TableCell>{row.type}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="text"
+                        style={{ color: '#007bff', textTransform: 'none' }}
+                        startIcon={<DescriptionIcon />}
+                      >
+                        {row.document}
+                      </Button>
+                    </TableCell>
+                    <TableCell>{row.working}</TableCell>
+                    <TableCell>{row.trackingNumber}</TableCell>
+                    <TableCell>
+                      <Box
+                        className="flex items-center justify-between rounded-lg border border-gray-300"
+                        sx={{ backgroundColor: '#f8f9fa' }}
+                      >
+                        <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
+                          <VisibilityIcon />
+                        </IconButton>
+                        <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
+                        <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
 
       {/* Modal for adding new Company Inventory */}
@@ -168,43 +241,47 @@ const CompanyInventory = () => {
             noValidate
             autoComplete="off"
             className="flex flex-col gap-4 mt-4"
+            onSubmit={handleSubmit}
           >
             <TextField
               required
-              id="machinery-name"
+              name="machineryName"
               label="Machinery Name"
               fullWidth
+              onChange={handleInputChange}
             />
             <TextField
               required
-              id="type"
+              name="type"
               label="Type"
               fullWidth
+              onChange={handleInputChange}
             />
             <TextField
               required
-              id="tracking-number"
+              name="trackingNumber"
               label="Tracking Number"
               fullWidth
+              onChange={handleInputChange}
             />
             <Select
               required
               fullWidth
-              label="Working"
-              value=""
-              onChange={() => {}}
+              name="working"
+              value={formData.working}
+              onChange={handleInputChange}
               displayEmpty
             >
-              <MenuItem value="">Select</MenuItem>
+              <MenuItem value="">Select Working</MenuItem>
               <MenuItem value="Yes">Yes</MenuItem>
               <MenuItem value="No">No</MenuItem>
             </Select>
             <TextField
               required
-              id="picture-document"
-            //  label="Picture/Document"
+              name="document"
               type="file"
               fullWidth
+              onChange={handleFileChange}
             />
             <div className="flex justify-end mt-4">
               <Button onClick={handleClose} color="error">
