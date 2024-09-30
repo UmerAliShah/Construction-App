@@ -288,7 +288,7 @@ const IPCTracking = () => {
                                 <VisibilityIcon />
                             </IconButton>
                             <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                            <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                            <IconButton aria-label="delete" onClick={() => handleDelete()} sx={{ color: '#dc3545' }}>
                                 <DeleteIcon />
                             </IconButton>
                         </Box>
@@ -300,6 +300,193 @@ const IPCTracking = () => {
           </TableContainer>
         )}
       </Paper>
+
+      {/* Modal for adding new IPC tracking */}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            Add IPC Tracking
+          </Typography>
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+            onSubmit={handleSubmit}
+          >
+            <Select
+              required
+              fullWidth
+              displayEmpty
+              value={newIpc.site}
+              onChange={(e) => setNewIpc({ ...newIpc, site: e.target.value })}
+            >
+              <MenuItem value="">Select Project</MenuItem>
+              {projects.map((project) => (
+                <MenuItem key={project._id} value={project._id}>
+                  {project.name}
+                </MenuItem>
+              ))}
+            </Select>
+
+            <TextField
+              required
+              id="ipc-number"
+              label="IPC Number"
+              fullWidth
+              value={newIpc.ipcNumber}
+              onChange={(e) =>
+                setNewIpc({ ...newIpc, ipcNumber: e.target.value })
+              }
+            />
+
+            <TextField
+              required
+              id="ipc-amount"
+              label="IPC Amount"
+              fullWidth
+              value={newIpc.ipcAmount}
+              onChange={(e) =>
+                setNewIpc({ ...newIpc, ipcAmount: e.target.value })
+              }
+            />
+
+            <Select
+              required
+              fullWidth
+              value={newIpc.status}
+              onChange={(e) => setNewIpc({ ...newIpc, status: e.target.value })}
+              displayEmpty
+            >
+              <MenuItem value="">Select Status</MenuItem>
+              <MenuItem value="in-proress">In-Progress</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
+            </Select>
+
+            <TextField
+              required
+              id="document"
+              fullWidth
+              type="file"
+              onChange={(e) =>
+                setNewIpc({ ...newIpc, document: e.target.files[0] })
+              }
+            />
+
+            <div className="flex justify-end mt-4">
+              <Button onClick={handleClose} color="error">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                className="!bg-[#FC8908]"
+              >
+                Add IPC Tracking
+              </Button>
+            </div>
+          </Box>
+        </Box>
+      </Modal>
+
+      {/* Modal for editing IPC tracking */}
+      <Modal
+        open={editOpen}
+        onClose={handleEditClose}
+        aria-labelledby="edit-modal-title"
+        aria-describedby="edit-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="edit-modal-title" variant="h6" component="h2">
+            Edit IPC Tracking
+          </Typography>
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+            onSubmit={handleUpdate}
+          >
+            <Select
+              required
+              fullWidth
+              displayEmpty
+              value={editIpc.site}
+              onChange={(e) => setEditIpc({ ...editIpc, site: e.target.value })}
+            >
+              <MenuItem value="">Select Project</MenuItem>
+              {projects.map((project) => (
+                <MenuItem key={project._id} value={project._id}>
+                  {project.name}
+                </MenuItem>
+              ))}
+            </Select>
+
+            <TextField
+              required
+              id="edit-ipc-number"
+              label="IPC Number"
+              fullWidth
+              value={editIpc.ipcNumber}
+              onChange={(e) =>
+                setEditIpc({ ...editIpc, ipcNumber: e.target.value })
+              }
+            />
+
+            <TextField
+              required
+              id="edit-ipc-amount"
+              label="IPC Amount"
+              fullWidth
+              value={editIpc.ipcAmount}
+              onChange={(e) =>
+                setEditIpc({ ...editIpc, ipcAmount: e.target.value })
+              }
+            />
+
+            <Select
+              required
+              fullWidth
+              value={editIpc.status}
+              onChange={(e) =>
+                setEditIpc({ ...editIpc, status: e.target.value })
+              }
+              displayEmpty
+            >
+              <MenuItem value="">Select Status</MenuItem>
+              <MenuItem value="In-Progress">In-Progress</MenuItem>
+              <MenuItem value="Completed">Completed</MenuItem>
+            </Select>
+
+            <TextField
+              id="edit-document"
+              fullWidth
+              type="file"
+              onChange={(e) =>
+                setEditIpc({ ...editIpc, document: e.target.files[0] })
+              }
+            />
+
+            <div className="flex justify-end mt-4">
+              <Button onClick={handleEditClose} color="error">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                className="!bg-[#FC8908]"
+              >
+                Update IPC Tracking
+              </Button>
+            </div>
+          </Box>
+        </Box>
+      </Modal>
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
