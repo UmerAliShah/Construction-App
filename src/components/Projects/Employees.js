@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Checkbox,
   IconButton,
   Typography,
   Paper,
@@ -43,14 +42,6 @@ const Employees = () => {
     navigate("/add-employee");
   };
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelected(employees.map((_, index) => index));
-    } else {
-      setSelected([]);
-    }
-  };
-
   const isEmployeesPage = location.pathname === "/employees";
   useEffect(() => {
     if (selectedProject) {
@@ -71,26 +62,6 @@ const Employees = () => {
     const response = await apiClient.get("/users/");
     setEmployees(response.data);
     setLoading(false); // Set loading to false once data is fetched
-  };
-
-  const handleSelect = (index) => {
-    const selectedIndex = selected.indexOf(index);
-    let newSelected = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, index);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-
-    setSelected(newSelected);
   };
 
   const handleEntriesChange = (event) => {
@@ -155,20 +126,6 @@ const Employees = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      color="primary"
-                      indeterminate={
-                        selected.length > 0 &&
-                        selected.length < employees.length
-                      }
-                      checked={
-                        employees.length > 0 &&
-                        selected.length === employees.length
-                      }
-                      onChange={handleSelectAll}
-                    />
-                  </TableCell>
                   <TableCell>Employee Name</TableCell>
                   <TableCell>ID</TableCell>
                   <TableCell>Phone Number</TableCell>
@@ -180,13 +137,6 @@ const Employees = () => {
               <TableBody>
                 {employees.map((employee, index) => (
                   <TableRow key={index}>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={selected.indexOf(index) !== -1}
-                        onChange={() => handleSelect(index)}
-                      />
-                    </TableCell>
                     <TableCell>{employee.name}</TableCell>
                     <TableCell>{employee.employeeId}</TableCell>
                     <TableCell>{employee.phone}</TableCell>

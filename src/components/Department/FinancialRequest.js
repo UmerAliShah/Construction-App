@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Checkbox,
   CircularProgress, // Import CircularProgress
   Grid,
   IconButton,
@@ -46,15 +45,6 @@ const FinancialRequests = () => {
     } else {
       setSelected([]);
     }
-  };
-
-  const handleSelect = (id) => {
-    const selectedIndex = selected.indexOf(id);
-    const newSelected =
-      selectedIndex === -1
-        ? selected.concat(id)
-        : selected.filter((item) => item !== id);
-    setSelected(newSelected);
   };
 
   const handleEntriesChange = (event) => {
@@ -124,20 +114,6 @@ const FinancialRequests = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      color="primary"
-                      indeterminate={
-                        selected.length > 0 &&
-                        selected.length < filteredData.length
-                      }
-                      checked={
-                        filteredData.length > 0 &&
-                        selected.length === filteredData.length
-                      }
-                      onChange={handleSelectAll}
-                    />
-                  </TableCell>
                   <TableCell>Department Type</TableCell>
                   <TableCell>Name of Person Concerned</TableCell>
                   <TableCell>Type</TableCell>
@@ -150,13 +126,6 @@ const FinancialRequests = () => {
               <TableBody>
                 {filteredData.map((row, index) => (
                   <TableRow key={row.id}>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={selected.indexOf(index) !== -1}
-                        onChange={() => handleSelect(index)}
-                      />
-                    </TableCell>
                     <TableCell className="flex-1">{row.department}</TableCell>
                     <TableCell className="flex-1">
                       {row.nameOfConcerned || "no name"}

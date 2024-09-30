@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Checkbox,
   CircularProgress,
   Divider,
   IconButton,
@@ -85,34 +84,6 @@ const IPCTracking = () => {
   useEffect(() => {
     fetchIPCData();
   }, []);
-
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelected(ipcData.map((ipc) => ipc._id));
-    } else {
-      setSelected([]);
-    }
-  };
-
-  const handleSelect = (id) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-
-    setSelected(newSelected);
-  };
 
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
@@ -238,18 +209,6 @@ const IPCTracking = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      color="primary"
-                      indeterminate={
-                        selected.length > 0 && selected.length < ipcData.length
-                      }
-                      checked={
-                        ipcData.length > 0 && selected.length === ipcData.length
-                      }
-                      onChange={handleSelectAll}
-                    />
-                  </TableCell>
                   <TableCell>Project Name</TableCell>
                   <TableCell>IPC Number</TableCell>
                   <TableCell>IPC Amount</TableCell>
@@ -261,13 +220,6 @@ const IPCTracking = () => {
               <TableBody>
                 {ipcData.map((row) => (
                   <TableRow key={row._id}>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={selected.includes(row._id)}
-                        onChange={() => handleSelect(row._id)}
-                      />
-                    </TableCell>
                     <TableCell>{row.site.name}</TableCell>
                     <TableCell>{row.ipcNumber}</TableCell>
                     <TableCell>{row.ipcAmount}</TableCell>

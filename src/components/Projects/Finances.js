@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Checkbox,
   Modal,
   Paper,
   Select,
@@ -54,34 +53,6 @@ const Finances = () => {
   const [employees, setEmployees] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
-
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelected(data.map((_, index) => index));
-    } else {
-      setSelected([]);
-    }
-  };
-
-  const handleSelect = (index) => {
-    const selectedIndex = selected.indexOf(index);
-    let newSelected = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, index);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-
-    setSelected(newSelected);
-  };
 
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
@@ -163,16 +134,6 @@ const Finances = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      color="primary"
-                      indeterminate={
-                        selected.length > 0 && selected.length < data.length
-                      }
-                      checked={data.length > 0 && selected.length === data.length}
-                      onChange={handleSelectAll}
-                    />
-                  </TableCell>
                   <TableCell>Department Type</TableCell>
                   <TableCell>Name of Person Concerned</TableCell>
                   <TableCell>Type</TableCell>
@@ -185,13 +146,6 @@ const Finances = () => {
               <TableBody>
                 {data.map((row, index) => (
                   <TableRow key={row.id}>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={selected.indexOf(index) !== -1}
-                        onChange={() => handleSelect(index)}
-                      />
-                    </TableCell>
                     <TableCell>{row.department}</TableCell>
                     <TableCell>{row.nameOfConcerned?.name || "no name"}</TableCell>
                     <TableCell>{row.partstype}</TableCell>

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  Checkbox,
   IconButton,
   MenuItem,
   Modal,
@@ -66,24 +65,6 @@ const SupplyTracking = () => {
     fetchData();
   }, []);
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelected(data.map((item) => item.id));
-    } else {
-      setSelected([]);
-    }
-  };
-
-  const handleSelect = (id) => {
-    setSelected((prevSelected) => {
-      if (prevSelected.includes(id)) {
-        return prevSelected.filter((s) => s !== id);
-      } else {
-        return [...prevSelected, id];
-      }
-    });
-  };
-
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
@@ -137,14 +118,6 @@ const SupplyTracking = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  color="primary"
-                  indeterminate={selected.length > 0 && selected.length < data.length}
-                  checked={data.length > 0 && selected.length === data.length}
-                  onChange={handleSelectAll}
-                />
-              </TableCell>
               <TableCell><Typography className="!font-semibold">Order Reference Number</Typography></TableCell>
               <TableCell><Typography className="!font-semibold">Amount Adequately Fulfilled</Typography></TableCell>
               <TableCell><Typography className="!font-semibold">Picture/Document</Typography></TableCell>
@@ -161,13 +134,6 @@ const SupplyTracking = () => {
             ) : (
               data.map((row, index) => (
                 <TableRow key={row.id}>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      color="primary"
-                      checked={selected.includes(row.id)}
-                      onChange={() => handleSelect(row.id)}
-                    />
-                  </TableCell>
                   <TableCell>{row.orderReferenceNumber}</TableCell>
                   <TableCell>
                     <span
