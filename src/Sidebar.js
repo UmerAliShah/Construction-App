@@ -337,6 +337,15 @@ const Sidebar = ({ toggleSidebar }) => {
                 >
                   Site Inventory
                 </NavLink>
+                <NavLink
+                  to="/machinery-finances"
+                  onClick={toggleSidebar}
+                  className={({ isActive }) =>
+                    isActive ? "block py-1 !text-orange-500" : "block py-1"
+                  }
+                >
+                  Machinary Finances
+                </NavLink>
               </div>
             )}
           </div>
