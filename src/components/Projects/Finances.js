@@ -177,7 +177,6 @@ const Finances = () => {
                   <TableCell>Name of Person Concerned</TableCell>
                   <TableCell>Type</TableCell>
                   <TableCell>Amount Given</TableCell>
-                  <TableCell>Total Given So Far</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Approved By</TableCell>
                   <TableCell>Actions</TableCell>
@@ -196,7 +195,6 @@ const Finances = () => {
                     <TableCell>{row.department}</TableCell>
                     <TableCell>{row.nameOfConcerned?.name || "no name"}</TableCell>
                     <TableCell>{row.partstype}</TableCell>
-                    <TableCell>{row.amount}</TableCell>
                     <TableCell>{row.amount}</TableCell>
                     <TableCell>
                       <span

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -17,37 +17,40 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography
-} from '@mui/material';
-import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
-import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
-import DescriptionIcon from '@mui/icons-material/Description';
-import Pagination from '../../Pagination';
-import apiClient from '../../api/apiClient';
+  Typography,
+} from "@mui/material";
+import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
+import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
+import DescriptionIcon from "@mui/icons-material/Description";
+import Pagination from "../../Pagination";
+import apiClient from "../../api/apiClient";
+import { fetchSites } from "../../Sidebar";
 
 const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
   width: 400,
-  bgcolor: 'background.paper',
+  bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
-  borderRadius: '8px',
+  borderRadius: "8px",
 };
 
 const CompanyInventory = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [projects, setProjects] = useState([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [formData, setFormData] = useState({
-    machineryName: '',
-    type: '',
-    trackingNumber: '',
-    working: '',
+    machineryName: "",
+    type: "",
+    trackingNumber: "",
+    working: "",
+    site: "",
     document: null,
   });
 
@@ -55,16 +58,17 @@ const CompanyInventory = () => {
     // Fetch data from the backend
     const fetchData = async () => {
       try {
-        const response = await apiClient.get('/mechinaries');
+        const response = await apiClient.get("/machinery");
         setData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
         setLoading(false);
       }
     };
 
     fetchData();
+    fetchSites(setProjects);
   }, []);
 
   const handleSelectAll = (event) => {
@@ -120,21 +124,21 @@ const CompanyInventory = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formDataToSend = new FormData();
-    formDataToSend.append('machineryName', formData.machineryName);
-    formDataToSend.append('type', formData.type);
-    formDataToSend.append('trackingNumber', formData.trackingNumber);
-    formDataToSend.append('working', formData.working);
-    formDataToSend.append('document', formData.document);
+    formDataToSend.append("name", formData.machineryName);
+    formDataToSend.append("type", formData.type);
+    formDataToSend.append("trackingNumber", formData.trackingNumber);
+    formDataToSend.append("workingOn", formData.site);
+    formDataToSend.append("document", formData.document);
 
     try {
-      const response = await apiClient.post('/mechinaries', formDataToSend);
-      console.log('Inventory added:', response.data);
+      const response = await apiClient.post("/machinery", formDataToSend);
+      console.log("Inventory added:", response.data);
       setOpen(false);
       // Optionally refetch the data after adding the inventory
-      const newData = await apiClient.get('/mechinaries');
+      const newData = await apiClient.get("/machinery");
       setData(newData.data);
     } catch (error) {
-      console.error('Error adding inventory:', error);
+      console.error("Error adding inventory:", error);
     }
   };
 
@@ -160,7 +164,9 @@ const CompanyInventory = () => {
                 <TableCell padding="checkbox">
                   <Checkbox
                     color="primary"
-                    indeterminate={selected.length > 0 && selected.length < data.length}
+                    indeterminate={
+                      selected.length > 0 && selected.length < data.length
+                    }
                     checked={data.length > 0 && selected.length === data.length}
                     onChange={handleSelectAll}
                   />
@@ -190,29 +196,36 @@ const CompanyInventory = () => {
                         onChange={() => handleSelect(index)}
                       />
                     </TableCell>
-                    <TableCell>{row.machineryName}</TableCell>
+                    <TableCell>{row.name}</TableCell>
                     <TableCell>{row.type}</TableCell>
                     <TableCell>
                       <Button
                         variant="text"
-                        style={{ color: '#007bff', textTransform: 'none' }}
+                        style={{ color: "#007bff", textTransform: "none" }}
                         startIcon={<DescriptionIcon />}
                       >
                         {row.document}
                       </Button>
                     </TableCell>
-                    <TableCell>{row.working}</TableCell>
+                    <TableCell>{row.workingOn.name}</TableCell>
                     <TableCell>{row.trackingNumber}</TableCell>
                     <TableCell>
                       <Box
                         className="flex items-center justify-between rounded-lg border border-gray-300"
-                        sx={{ backgroundColor: '#f8f9fa' }}
+                        sx={{ backgroundColor: "#f8f9fa" }}
                       >
-                        <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
+                        <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
                           <VisibilityIcon />
                         </IconButton>
-                        <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                        <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                        <Divider
+                          orientation="vertical"
+                          flexItem
+                          sx={{ borderColor: "#e0e0e0" }}
+                        />
+                        <IconButton
+                          aria-label="delete"
+                          sx={{ color: "#dc3545" }}
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </Box>
@@ -273,9 +286,27 @@ const CompanyInventory = () => {
               displayEmpty
             >
               <MenuItem value="">Select Working</MenuItem>
-              <MenuItem value="Yes">Yes</MenuItem>
-              <MenuItem value="No">No</MenuItem>
+              <MenuItem value="yes">Yes</MenuItem>
+              <MenuItem value="no">No</MenuItem>
             </Select>
+            {formData.working === "yes" ? (
+              <Select
+                required
+                fullWidth
+                displayEmpty
+                value={formData.site}
+                onChange={(e) => setFormData({ ...formData, site: e.target.value })}
+              >
+                <MenuItem value="">Select Project</MenuItem>
+                {projects.map((project) => (
+                  <MenuItem key={project._id} value={project._id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : (
+              ""
+            )}
             <TextField
               required
               name="document"
@@ -287,7 +318,11 @@ const CompanyInventory = () => {
               <Button onClick={handleClose} color="error">
                 Cancel
               </Button>
-              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+              <Button
+                type="submit"
+                variant="contained"
+                className="!bg-[#FC8908]"
+              >
                 Add Inventory
               </Button>
             </div>
@@ -297,7 +332,11 @@ const CompanyInventory = () => {
 
       <Box className="flex justify-between items-center mt-6">
         <Box className="flex items-center">
-          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            className="mr-2 pr-2"
+          >
             Showing
           </Typography>
           <Select
@@ -314,7 +353,10 @@ const CompanyInventory = () => {
             of 10,678 entries
           </Typography>
         </Box>
-        <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
+        <Pagination
+          count={5}
+          onPageChange={(page) => console.log("Page:", page)}
+        />
       </Box>
     </Box>
   );
