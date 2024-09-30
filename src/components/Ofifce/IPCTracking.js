@@ -379,8 +379,8 @@ const IPCTracking = () => {
               displayEmpty
             >
               <MenuItem value="">Select Status</MenuItem>
-              <MenuItem value="In-Progress">In-Progress</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
+              <MenuItem value="in-proress">In-Progress</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
             </Select>
 
             <TextField
@@ -475,8 +475,8 @@ const IPCTracking = () => {
               displayEmpty
             >
               <MenuItem value="">Select Status</MenuItem>
-              <MenuItem value="In-Progress">In-Progress</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
+              <MenuItem value="in-proress">In-Progress</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
             </Select>
 
             <TextField
