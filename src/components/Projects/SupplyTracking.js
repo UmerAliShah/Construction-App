@@ -1,185 +1,238 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
   Checkbox,
-  Divider,
-  Grid,
   IconButton,
   MenuItem,
   Modal,
   Paper,
   Select,
   TextField,
-  Typography
-} from '@mui/material';
-import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
-import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
-import DescriptionIcon from '@mui/icons-material/Description';
-import Pagination from '../../Pagination'; 
-
-const demoData = Array(10).fill({
-  orderReferenceNumber: '652321458',
-  amountFulfilled: 'Yes',
-  document: 'Site Inspection.pdf',
-});
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
+import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
+import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
+import DescriptionIcon from "@mui/icons-material/Description";
+import Pagination from "../../Pagination";
+import { DotLoader } from "react-spinners";
+import apiClient from "../../api/apiClient";
 
 const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
   width: 400,
-  bgcolor: 'background.paper',
+  bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
-  borderRadius: '8px',
+  borderRadius: "8px",
 };
 
 const SupplyTracking = () => {
+  const [data, setData] = useState([]);
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const initialData = {
+    refNumber: "",
+    amountFulfilled: "",
+    document: "",
+  };
+  const [supplyTracking, setSupplyTracking] = useState(initialData);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get("/supply");
+      setData(response.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelected(demoData.map((_, index) => index));
+      setSelected(data.map((item) => item.id));
     } else {
       setSelected([]);
     }
   };
 
-  const handleSelect = (index) => {
-    const selectedIndex = selected.indexOf(index);
-    let newSelected = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, index);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-
-    setSelected(newSelected);
-  };
-
-  const handleEntriesChange = (event) => {
-    setEntriesPerPage(event.target.value);
+  const handleSelect = (id) => {
+    setSelected((prevSelected) => {
+      if (prevSelected.includes(id)) {
+        return prevSelected.filter((s) => s !== id);
+      } else {
+        return [...prevSelected, id];
+      }
+    });
   };
 
   const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    setOpen(false);
+    setSupplyTracking(initialData);
+  };
+
+  const handleCreate = async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData();
+    formData.append("refNumber", supplyTracking.refNumber);
+    formData.append("amountFulfilled", supplyTracking.amountFulfilled);
+    if (supplyTracking.document) {
+      formData.append("document", supplyTracking.document);
+    }
+
+    setSubmitting(true);
+    try {
+      await apiClient.post("/supply", formData);
+      fetchData();
+    } catch (error) {
+      console.error("Error creating supply:", error);
+    }
+    setSubmitting(false);
+    handleClose();
+  };
+
+  const handleDelete = async (id) => {
+    setSubmitting(true);
+    try {
+      await apiClient.delete(`/supply/${id}`);
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting supply:", error);
+    }
+    setSubmitting(false);
+  };
 
   return (
     <Box className="p-6">
-        <Box className="flex justify-between items-center mb-4">
-            <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-                Projects &gt; Supply Tracking
-            </Typography>
-            <Button
-                variant="contained"
-                className="mb-4 !bg-[#FC8908]"
-                onClick={handleOpen}
-            >
-                + Add Supply Tracking
-            </Button>
+      <Box className="flex justify-between items-center mb-4">
+        <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
+          Projects &gt; Supply Tracking
+        </Typography>
+        <Button variant="contained" className="mb-4 !bg-[#FC8908]" onClick={handleOpen}>
+          + Add Supply Tracking
+        </Button>
       </Box>
-      <Paper elevation={0} className="p-4">
-        <Grid container>
-          {/* Table Headings */}
-          <Grid item xs={12}>
-            <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Checkbox
-                color="primary"
-                indeterminate={selected.length > 0 && selected.length < demoData.length}
-                checked={demoData.length > 0 && selected.length === demoData.length}
-                onChange={handleSelectAll}
-              />
-              <Typography className="flex-1 !font-semibold">Order Reference Number</Typography>
-              <Typography className="flex-1 !font-semibold">Amount Adequately Fulfilled</Typography>
-              <Typography className="flex-1 !font-semibold">Picture/Document</Typography>
-              <Typography className="!font-semibold">Action</Typography>
-            </Box>
-          </Grid>
 
-          {/* Table Rows */}
-          {demoData.map((row, index) => (
-            <Grid item xs={12} key={index}>
-              <Box
-                className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2"
-              >
+      <TableContainer component={Paper} elevation={0} className="p-4">
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell padding="checkbox">
                 <Checkbox
                   color="primary"
-                  checked={selected.indexOf(index) !== -1}
-                  onChange={() => handleSelect(index)}
+                  indeterminate={selected.length > 0 && selected.length < data.length}
+                  checked={data.length > 0 && selected.length === data.length}
+                  onChange={handleSelectAll}
                 />
-                <Typography className="flex-1">{row.orderReferenceNumber}</Typography>
-                <Typography className="flex-1">
-                  <span style={{ background: row.amountFulfilled === 'Yes' ? '#62912C47' : 'red', borderRadius: '30px', padding: '0 8px'  }}>
-                    {row.amountFulfilled}
-                  </span>
-                </Typography>
-                <Typography className="flex-1">
-                  <Button
-                    variant="text"
-                    style={{ color: '#007bff', textTransform: 'none' }}
-                    startIcon={<DescriptionIcon />}
-                  >
-                    {row.document}
-                  </Button>
-                </Typography>
-                <Box
-                  className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: '#f8f9fa' }}>
-                  <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </Paper>
+              </TableCell>
+              <TableCell><Typography className="!font-semibold">Order Reference Number</Typography></TableCell>
+              <TableCell><Typography className="!font-semibold">Amount Adequately Fulfilled</Typography></TableCell>
+              <TableCell><Typography className="!font-semibold">Picture/Document</Typography></TableCell>
+              <TableCell><Typography className="!font-semibold">Action</Typography></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <DotLoader color="#f1780e" loading={loading} />
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.map((row, index) => (
+                <TableRow key={row.id}>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      checked={selected.includes(row.id)}
+                      onChange={() => handleSelect(row.id)}
+                    />
+                  </TableCell>
+                  <TableCell>{row.orderReferenceNumber}</TableCell>
+                  <TableCell>
+                    <span
+                      style={{
+                        background: row.amountFulfilled === "Yes" ? "#62912C47" : "red",
+                        borderRadius: "30px",
+                        padding: "0 8px",
+                      }}
+                    >
+                      {row.amountFulfilled}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="text"
+                      style={{ color: "#007bff", textTransform: "none" }}
+                      startIcon={<DescriptionIcon />}
+                    >
+                      {row.document}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Box
+                      className="flex items-center justify-between rounded-lg border border-gray-300"
+                      sx={{ backgroundColor: "#f8f9fa" }}
+                    >
+                      <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
+                        <VisibilityIcon />
+                      </IconButton>
+                      <IconButton
+                        aria-label="delete"
+                        sx={{ color: "#dc3545" }}
+                        onClick={() => handleDelete(row.id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-      {/* Modal for adding new Supply Tracking */}
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-      >
+      <Modal open={open} onClose={handleClose} aria-labelledby="modal-title" aria-describedby="modal-description">
         <Box sx={style}>
           <Typography id="modal-title" variant="h6" component="h2">
             Add Supply Tracking
           </Typography>
-          <Box
-            component="form"
-            noValidate
-            autoComplete="off"
-            className="flex flex-col gap-4 mt-4"
-          >
+          <Box component="form" noValidate autoComplete="off" className="flex flex-col gap-4 mt-4" onSubmit={handleCreate}>
             <TextField
               required
               id="order-reference-number"
               label="Order Reference Number"
               fullWidth
+              value={supplyTracking.refNumber}
+              onChange={(e) => setSupplyTracking({ ...supplyTracking, refNumber: e.target.value })}
             />
             <Select
               required
               fullWidth
-              value=""
-              onChange={() => {}}
               displayEmpty
+              value={supplyTracking.amountFulfilled}
+              onChange={(e) => setSupplyTracking({ ...supplyTracking, amountFulfilled: e.target.value })}
             >
               <MenuItem value="">Select Fulfillment</MenuItem>
               <MenuItem value="Yes">Yes</MenuItem>
@@ -188,30 +241,30 @@ const SupplyTracking = () => {
             <TextField
               required
               id="picture-document"
-            //  label="Picture/Document"
               type="file"
               fullWidth
+              onChange={(e) => setSupplyTracking({ ...supplyTracking, document: e.target.files[0] })}
             />
-            <Box className="flex justify-end mt-4">
+            <div className="flex justify-end mt-4">
               <Button onClick={handleClose} color="error">
                 Cancel
               </Button>
               <Button type="submit" variant="contained" className="!bg-[#FC8908]">
-                Add Tracking
+                {submitting ? <DotLoader color="#f1780e" loading={submitting} size={20} /> : "Add Tracking"}
               </Button>
-            </Box>
+            </div>
           </Box>
         </Box>
       </Modal>
 
-      <Box className="flex justify-between items-center mt-6">
-        <Box className="flex items-center">
+      <div className="flex justify-between items-center mt-6">
+        <div className="flex items-center">
           <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
             Showing
           </Typography>
           <Select
             value={entriesPerPage}
-            onChange={handleEntriesChange}
+            onChange={(event) => setEntriesPerPage(event.target.value)}
             size="small"
             className="mr-2 dropdown-svg bg-orange-400 text-white"
           >
@@ -222,9 +275,9 @@ const SupplyTracking = () => {
           <Typography variant="body2" color="textSecondary">
             of 10,678 entries
           </Typography>
-        </Box>
-        <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
-      </Box>
+        </div>
+        <Pagination />
+      </div>
     </Box>
   );
 };

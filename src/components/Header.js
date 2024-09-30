@@ -17,7 +17,6 @@ const Header = () => {
         try {
           if (userId) {
             const res = await apiClient.get(`/users/${userId}`);
-            console.log(res, userId);
             if (res.status === 200) {
               setUserDetails(res.data);
             }

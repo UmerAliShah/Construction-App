@@ -4,7 +4,6 @@ import {
   Checkbox,
   IconButton,
   Typography,
-  Grid,
   Paper,
   Select,
   MenuItem,
@@ -15,13 +14,19 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  CircularProgress, // Import CircularProgress for loader
 } from "@mui/material";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
 import Pagination from "../../Pagination";
 import { useLocation, useNavigate } from "react-router-dom";
 import apiClient from "../../api/apiClient";
-import { useSelector } from "react-redux";
 
 const Employees = () => {
   const location = useLocation();
@@ -31,6 +36,7 @@ const Employees = () => {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [openDialog, setOpenDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [loading, setLoading] = useState(true); // Add loading state for data fetching
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -52,14 +58,17 @@ const Employees = () => {
         selectedProject.siteHead,
         selectedProject.assistant,
       ]);
+      setLoading(false); // Set loading to false once employees are loaded
     } else {
       fetchUsers();
     }
   }, [selectedProject]);
 
   const fetchUsers = async () => {
+    setLoading(true); // Set loading to true before fetching data
     const response = await apiClient.get("/users/");
     setEmployees(response.data);
+    setLoading(false); // Set loading to false once data is fetched
   };
 
   const handleSelect = (index) => {
@@ -93,11 +102,10 @@ const Employees = () => {
   const handleDelete = async () => {
     try {
       await apiClient.delete(`/users/${userToDelete}`);
-      // Remove the deleted user from the state
       setEmployees(
         employees.filter((employee) => employee._id !== userToDelete)
       );
-      setOpenDialog(false); // Close the dialog after deletion
+      setOpenDialog(false);
     } catch (error) {
       console.error("Error deleting employee:", error);
     }
@@ -133,97 +141,96 @@ const Employees = () => {
           + Add New Employee
         </Button>
       </div>
-      <Paper elevation={0} className="p-4">
-        <Grid container>
-          {/* Table Headings */}
-          <Grid item xs={12}>
-            <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Checkbox
-                color="primary"
-                indeterminate={
-                  selected.length > 0 && selected.length < employees.length
-                }
-                checked={
-                  employees.length > 0 && selected.length === employees.length
-                }
-                onChange={handleSelectAll}
-              />
-              <Typography className="flex-1 !font-semibold">
-                Employee Name
-              </Typography>
-              <Typography className="flex-1 !font-semibold">ID</Typography>
-              <Typography className="flex-1 !font-semibold">
-                Phone Number
-              </Typography>
-              <Typography className="flex-1 !font-semibold">Role</Typography>
-              <Typography className="flex-1 !font-semibold">Status</Typography>
-              <Typography className="!font-semibold">Action</Typography>
-            </Box>
-          </Grid>
 
-          {/* Table Rows */}
-          {employees.map((employee, index) => (
-            <Grid item xs={12} key={index}>
-              <Box className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2">
-                <Checkbox
-                  color="primary"
-                  checked={selected.indexOf(index) !== -1}
-                  onChange={() => handleSelect(index)}
-                />
-                <Typography className="flex-1">{employee.name}</Typography>
-                <Typography className="flex-1">
-                  {employee.employeeId}
-                </Typography>
-                <Typography className="flex-1">{employee.phone}</Typography>
-                <Typography className="flex-1">{employee.role}</Typography>
-                <Typography className="flex-1">
-                  <span
-                    style={{
-                      background: "#62912C47",
-                      borderRadius: "30px",
-                      padding: "10px",
-                    }}
-                  >
-                    {employee.status}
-                  </span>
-                </Typography>
-                <Box
-                  className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: "#f8f9fa" }}
-                >
-                  <IconButton
-                    aria-label="view"
-                    sx={{ color: "#6c757d" }}
-                    onClick={() => handleViewEmployee(employee._id)}
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider
-                    orientation="vertical"
-                    flexItem
-                    sx={{ borderColor: "#e0e0e0" }}
-                  />
-                  <IconButton
-                    aria-label="delete"
-                    sx={{ color: "#dc3545" }}
-                    onClick={() => handleOpenDialog(employee._id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+      <Paper elevation={0} className="p-4">
+        {loading ? (
+          <Box className="flex justify-center my-6">
+            <CircularProgress color="primary" /> {/* Circular progress shown while loading */}
+          </Box>
+        ) : (
+          <TableContainer component={Paper} style={{ overflowX: "auto" }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      indeterminate={
+                        selected.length > 0 && selected.length < employees.length
+                      }
+                      checked={
+                        employees.length > 0 && selected.length === employees.length
+                      }
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                  <TableCell>Employee Name</TableCell>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Phone Number</TableCell>
+                  <TableCell>Role</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {employees.map((employee, index) => (
+                  <TableRow key={index}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        color="primary"
+                        checked={selected.indexOf(index) !== -1}
+                        onChange={() => handleSelect(index)}
+                      />
+                    </TableCell>
+                    <TableCell>{employee.name}</TableCell>
+                    <TableCell>{employee.employeeId}</TableCell>
+                    <TableCell>{employee.phone}</TableCell>
+                    <TableCell>{employee.role}</TableCell>
+                    <TableCell>
+                      <span
+                        style={{
+                          background: "#62912C47",
+                          borderRadius: "30px",
+                          padding: "10px",
+                        }}
+                      >
+                        {employee.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Box className="flex items-center justify-around rounded-lg border border-gray-300">
+                        <IconButton
+                          aria-label="view"
+                          sx={{ color: "#6c757d" }}
+                          onClick={() => handleViewEmployee(employee._id)}
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                        <Divider
+                          orientation="vertical"
+                          flexItem
+                          sx={{ borderColor: "#e0e0e0" }}
+                        />
+                        <IconButton
+                          aria-label="delete"
+                          sx={{ color: "#dc3545" }}
+                          onClick={() => handleOpenDialog(employee._id)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Paper>
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            className="mr-2 pr-2"
-          >
+          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
             Showing
           </Typography>
           <Select
@@ -240,10 +247,7 @@ const Employees = () => {
             of {employees.length} entries
           </Typography>
         </div>
-        <Pagination
-          count={5}
-          onPageChange={(page) => console.log("Page:", page)}
-        />
+        <Pagination count={5} onPageChange={(page) => console.log("Page:", page)} />
       </div>
 
       {/* Confirmation Dialog */}

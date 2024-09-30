@@ -3,13 +3,19 @@ import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   Divider,
-  Grid,
   IconButton,
   MenuItem,
   Modal,
   Paper,
   Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -38,6 +44,7 @@ const IPCTracking = () => {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [ipcData, setIpcData] = useState([]);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false); // Add loading state
   const [projects, setProjects] = useState([]);
   const [newIpc, setNewIpc] = useState({
     site: "",
@@ -65,11 +72,13 @@ const IPCTracking = () => {
   // Fetch data from the backend
   const fetchIPCData = async () => {
     try {
+      setLoading(true); // Set loading to true when fetching starts
       const response = await apiClient.get("/ipc");
       setIpcData(response.data);
-      console.log(response.data, "test");
+      setLoading(false); // Set loading to false once fetching is done
     } catch (error) {
       console.error("Failed to fetch IPC data:", error);
+      setLoading(false);
     }
   };
 
@@ -176,7 +185,6 @@ const IPCTracking = () => {
       console.error("Error updating IPC record:", error);
     }
   };
-  
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this IPC record?"))
@@ -204,299 +212,94 @@ const IPCTracking = () => {
           + Add IPC Tracking
         </Button>
       </div>
+
       <Paper elevation={0} className="p-4">
-        <Grid container>
-          {/* Table Headings */}
-          <Grid item xs={12}>
-            <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Checkbox
-                color="primary"
-                indeterminate={
-                  selected.length > 0 && selected.length < ipcData.length
-                }
-                checked={
-                  ipcData.length > 0 && selected.length === ipcData.length
-                }
-                onChange={handleSelectAll}
-              />
-              <Typography className="flex-1 !font-semibold">
-                Project Name
-              </Typography>
-              <Typography className="flex-1 !font-semibold">
-                IPC Number
-              </Typography>
-              <Typography className="flex-1 !font-semibold">
-                IPC Amount
-              </Typography>
-              <Typography className="flex-1 !font-semibold">Status</Typography>
-              <Typography className="flex-1 !font-semibold">
-                Documents
-              </Typography>
-              <Typography className="!font-semibold">Action</Typography>
-            </Box>
-          </Grid>
-
-          {/* Table Rows */}
-          {ipcData.map((row) => (
-            <Grid item xs={12} key={row._id}>
-              <Box className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2">
-                <Checkbox
-                  color="primary"
-                  checked={selected.includes(row._id)}
-                  onChange={() => handleSelect(row._id)}
-                />
-                <Typography className="flex-1">{row.site.name}</Typography>{" "}
-                {/* Assuming 'site' has a 'name' field */}
-                <Typography className="flex-1">{row.ipcNumber}</Typography>
-                <Typography className="flex-1">{row.ipcAmount}</Typography>
-                <Typography className="flex-1">
-                  <Button
-                    variant="contained"
-                    size="small"
-                    style={{
-                      backgroundColor: "#ffcc80",
-                      color: "#f57c00",
-                      borderRadius: "16px",
-                    }}
-                  >
-                    {row.status}
-                  </Button>
-                </Typography>
-                <Typography className="flex-1">
-                  <Button
-                    variant="text"
-                    style={{ color: "#007bff", textTransform: "none" }}
-                    startIcon={<DescriptionIcon />}
-                    href={row.document} // Assuming 'document' is a URL
-                    target="_blank"
-                  >
-                    View Document
-                  </Button>
-                </Typography>
-                <Box
-                  className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: "#f8f9fa" }}
-                >
-                  <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider
-                    orientation="vertical"
-                    flexItem
-                    sx={{ borderColor: "#e0e0e0" }}
-                  />
-                  <IconButton
-                    aria-label="edit"
-                    sx={{ color: "#007bff" }}
-                    onClick={() => handleEditOpen(row)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <Divider
-                    orientation="vertical"
-                    flexItem
-                    sx={{ borderColor: "#e0e0e0" }}
-                  />
-                  <IconButton
-                    aria-label="delete"
-                    sx={{ color: "#dc3545" }}
-                    onClick={() => handleDelete(row._id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+        {loading ? (
+          <div className="flex justify-center my-6">
+            <CircularProgress color="primary" />
+          </div>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      indeterminate={
+                        selected.length > 0 && selected.length < ipcData.length
+                      }
+                      checked={
+                        ipcData.length > 0 && selected.length === ipcData.length
+                      }
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                  <TableCell>Project Name</TableCell>
+                  <TableCell>IPC Number</TableCell>
+                  <TableCell>IPC Amount</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Documents</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {ipcData.map((row) => (
+                  <TableRow key={row._id}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        color="primary"
+                        checked={selected.includes(row._id)}
+                        onChange={() => handleSelect(row._id)}
+                      />
+                    </TableCell>
+                    <TableCell>{row.site.name}</TableCell>
+                    <TableCell>{row.ipcNumber}</TableCell>
+                    <TableCell>{row.ipcAmount}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        style={{
+                          backgroundColor: "#ffcc80",
+                          color: "#f57c00",
+                          borderRadius: "16px",
+                        }}
+                      >
+                        {row.status}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="text"
+                        style={{ color: "#007bff", textTransform: "none" }}
+                        startIcon={<DescriptionIcon />}
+                        href={row.document}
+                        target="_blank"
+                      >
+                        View Document
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                        <Box
+                            className="flex items-center justify-around rounded-lg border border-gray-300"
+                            sx={{ backgroundColor: '#f8f9fa' }}>
+                            <IconButton aria-label="edit" onClick={() => handleEditOpen(row)} sx={{ color: '#6c757d' }}>
+                                <VisibilityIcon />
+                            </IconButton>
+                            <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
+                            <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Paper>
-
-      {/* Modal for adding new IPC tracking */}
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="modal-title" variant="h6" component="h2">
-            Add IPC Tracking
-          </Typography>
-          <Box
-            component="form"
-            noValidate
-            autoComplete="off"
-            className="flex flex-col gap-4 mt-4"
-            onSubmit={handleSubmit}
-          >
-            <Select
-              required
-              fullWidth
-              displayEmpty
-              value={newIpc.site}
-              onChange={(e) => setNewIpc({ ...newIpc, site: e.target.value })}
-            >
-              <MenuItem value="">Select Project</MenuItem>
-              {projects.map((project) => (
-                <MenuItem key={project._id} value={project._id}>
-                  {project.name}
-                </MenuItem>
-              ))}
-            </Select>
-
-            <TextField
-              required
-              id="ipc-number"
-              label="IPC Number"
-              fullWidth
-              value={newIpc.ipcNumber}
-              onChange={(e) =>
-                setNewIpc({ ...newIpc, ipcNumber: e.target.value })
-              }
-            />
-
-            <TextField
-              required
-              id="ipc-amount"
-              label="IPC Amount"
-              fullWidth
-              value={newIpc.ipcAmount}
-              onChange={(e) =>
-                setNewIpc({ ...newIpc, ipcAmount: e.target.value })
-              }
-            />
-
-            <Select
-              required
-              fullWidth
-              value={newIpc.status}
-              onChange={(e) => setNewIpc({ ...newIpc, status: e.target.value })}
-              displayEmpty
-            >
-              <MenuItem value="">Select Status</MenuItem>
-              <MenuItem value="in-proress">In-Progress</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
-            </Select>
-
-            <TextField
-              required
-              id="document"
-              fullWidth
-              type="file"
-              onChange={(e) =>
-                setNewIpc({ ...newIpc, document: e.target.files[0] })
-              }
-            />
-
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleClose} color="error">
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                className="!bg-[#FC8908]"
-              >
-                Add IPC Tracking
-              </Button>
-            </div>
-          </Box>
-        </Box>
-      </Modal>
-
-      {/* Modal for editing IPC tracking */}
-      <Modal
-        open={editOpen}
-        onClose={handleEditClose}
-        aria-labelledby="edit-modal-title"
-        aria-describedby="edit-modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="edit-modal-title" variant="h6" component="h2">
-            Edit IPC Tracking
-          </Typography>
-          <Box
-            component="form"
-            noValidate
-            autoComplete="off"
-            className="flex flex-col gap-4 mt-4"
-            onSubmit={handleUpdate}
-          >
-            <Select
-              required
-              fullWidth
-              displayEmpty
-              value={editIpc.site}
-              onChange={(e) => setEditIpc({ ...editIpc, site: e.target.value })}
-            >
-              <MenuItem value="">Select Project</MenuItem>
-              {projects.map((project) => (
-                <MenuItem key={project._id} value={project._id}>
-                  {project.name}
-                </MenuItem>
-              ))}
-            </Select>
-
-            <TextField
-              required
-              id="edit-ipc-number"
-              label="IPC Number"
-              fullWidth
-              value={editIpc.ipcNumber}
-              onChange={(e) =>
-                setEditIpc({ ...editIpc, ipcNumber: e.target.value })
-              }
-            />
-
-            <TextField
-              required
-              id="edit-ipc-amount"
-              label="IPC Amount"
-              fullWidth
-              value={editIpc.ipcAmount}
-              onChange={(e) =>
-                setEditIpc({ ...editIpc, ipcAmount: e.target.value })
-              }
-            />
-
-            <Select
-              required
-              fullWidth
-              value={editIpc.status}
-              onChange={(e) =>
-                setEditIpc({ ...editIpc, status: e.target.value })
-              }
-              displayEmpty
-            >
-              <MenuItem value="">Select Status</MenuItem>
-              <MenuItem value="In-Progress">In-Progress</MenuItem>
-              <MenuItem value="Completed">Completed</MenuItem>
-            </Select>
-
-            <TextField
-              id="edit-document"
-              fullWidth
-              type="file"
-              onChange={(e) =>
-                setEditIpc({ ...editIpc, document: e.target.files[0] })
-              }
-            />
-
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleEditClose} color="error">
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                className="!bg-[#FC8908]"
-              >
-                Update IPC Tracking
-              </Button>
-            </div>
-          </Box>
-        </Box>
-      </Modal>
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">

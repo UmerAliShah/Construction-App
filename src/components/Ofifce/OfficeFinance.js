@@ -4,12 +4,17 @@ import {
   Button,
   Checkbox,
   Divider,
-  Grid,
   IconButton,
   MenuItem,
   Modal,
   Paper,
   Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -19,6 +24,7 @@ import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
 import DescriptionIcon from "@mui/icons-material/Description";
 import apiClient from "../../api/apiClient";
 import Toast from "../Toast";
+import { DotLoader } from "react-spinners"; // Import DotLoader
 
 const style = {
   position: "absolute",
@@ -36,20 +42,25 @@ const OfficeFinance = () => {
   const [selected, setSelected] = useState([]);
   const [data, setData] = useState([]);
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true); // Loader state
   const [showToast, setShowToast] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // Loader for saving
   const [toastData, SetToastData] = useState({
     bg: null,
     message: null,
   });
+  const [open, setOpen] = useState(false);
+  const [selectedFinance, setSelectedFinance] = useState(null); // Selected finance for editing
+
   const initialData = {
     nameOfConcerned: "",
     type: "",
     amount: "",
     document: "",
   };
+
   const [finance, setFinance] = useState(initialData);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
-  const [open, setOpen] = useState(false);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -82,6 +93,7 @@ const OfficeFinance = () => {
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
   };
+
   const showToastMessage = (message, bg) => {
     SetToastData({ message, bg });
     setShowToast(true);
@@ -89,19 +101,27 @@ const OfficeFinance = () => {
       setShowToast(false);
     }, 2000);
   };
-  const handleOpen = () => setOpen(true);
+
+  const handleOpen = () => {
+    setFinance(initialData); // Reset the form for new entry
+    setOpen(true);
+  };
+
   const handleClose = () => setOpen(false);
 
   const handleDelete = async (id) => {
+    setLoading(true); // Show loader during delete
     const response = await apiClient.delete(`/finance/${id}`);
     if (response.status === 200) {
-      showToastMessage("Entry Deleted SuccussFully", "bg-success");
+      showToastMessage("Entry Deleted Successfully", "bg-success");
       fetchFinance();
     }
+    setLoading(false); // Hide loader after delete
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSaving(true); // Show loader during create/update
 
     // Create formData to handle file upload (document)
     const formData = new FormData();
@@ -114,28 +134,50 @@ const OfficeFinance = () => {
     }
 
     try {
-      await apiClient.post("/finance", formData);
+      if (selectedFinance) {
+        // Update the existing finance entry
+        await apiClient.put(`/finance/${selectedFinance._id}`, formData);
+        showToastMessage("Finance Updated Successfully", "bg-success");
+      } else {
+        // Create new finance entry
+        await apiClient.post("/finance", formData);
+        showToastMessage("Finance Added Successfully", "bg-success");
+      }
+
       handleClose();
       fetchFinance();
       setFinance(initialData);
     } catch (error) {
-      console.error("Error adding finance record:", error);
+      console.error("Error adding/updating finance record:", error);
+    } finally {
+      setIsSaving(false); // Hide loader after saving
     }
   };
 
+  const handleEdit = (financeEntry) => {
+    setSelectedFinance(financeEntry); // Set the selected finance entry for editing
+    setFinance({
+      nameOfConcerned: financeEntry.nameOfConcerned || "",
+      type: financeEntry.partstype || "",
+      amount: financeEntry.amount || "",
+      document: "",
+    });
+    setOpen(true); // Open the modal for editing
+  };
+
   const fetchFinance = async () => {
+    setLoading(true); // Show loader during data fetching
     const response = await apiClient.get("/finance/office");
     if (response.status === 200) {
       setData(response.data);
-      console.log(response.data, "res");
     }
+    setLoading(false); // Hide loader after data fetching
   };
 
   const fetchUsers = async () => {
     const response = await apiClient.get("/users/");
     if (response.status === 200) {
       setUsers(response.data);
-      console.log(response.data, "res");
     }
   };
 
@@ -143,11 +185,11 @@ const OfficeFinance = () => {
     fetchFinance();
     fetchUsers();
   }, []);
+
   return (
     <Box className="p-6">
-      {showToast ? (
-        <Toast bg={toastData.bg} message={toastData.message} />
-      ) : null}
+      {showToast ? <Toast bg={toastData.bg} message={toastData.message} /> : null}
+
       <Box className="flex justify-between items-center mb-4">
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
           Office &gt; Finance
@@ -160,89 +202,97 @@ const OfficeFinance = () => {
           + Add Office Finance
         </Button>
       </Box>
-      <Paper elevation={0} className="p-4">
-        <Grid container>
-          {/* Table Headings */}
-          <Grid item xs={12}>
-            <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Checkbox
-                color="primary"
-                indeterminate={
-                  selected.length > 0 && selected.length < data.length
-                }
-                checked={data.length > 0 && selected.length === data.length}
-                onChange={handleSelectAll}
-              />
-              <Typography className="flex-1 !font-semibold">Type</Typography>
-              <Typography className="flex-1 !font-semibold">Amount</Typography>
-              <Typography className="flex-1 !font-semibold">
-                Documents
-              </Typography>
-              <Typography className="flex-1 !font-semibold">Status</Typography>
-              <Typography className="flex-1 !font-semibold">
-                Approved By
-              </Typography>
-              <Typography className="!font-semibold">Action</Typography>
-            </Box>
-          </Grid>
 
-          {data.map((row, index) => (
-            <Grid item xs={12} key={index}>
-              <Box className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2">
-                <Checkbox
-                  color="primary"
-                  checked={selected.indexOf(index) !== -1}
-                  onChange={() => handleSelect(index)}
-                />
-                <Typography className="flex-1">{row.partstype}</Typography>
-                <Typography className="flex-1">{row.amount}</Typography>
-                <Typography className="flex-1">
-                  <Button
-                    variant="text"
-                    style={{ color: "#007bff", textTransform: "none" }}
-                    startIcon={<DescriptionIcon />}
-                    href={row.document} // Assuming 'document' is a URL
-                    target="_blank"
-                  >
-                    View Document
-                  </Button>
-                </Typography>
-                <Typography className="flex-1">
-                  <span
-                    style={{
-                      background: "#62912C47",
-                      borderRadius: "30px",
-                      padding: "10px",
-                    }}
-                  >
-                    {row.status}
-                  </span>
-                </Typography>
-                <Typography className="flex-1">
-                  {row.approvedBy?.name || ""}
-                </Typography>
-                <Box
-                  className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: "#f8f9fa" }}
-                >
-                  <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider
-                    orientation="vertical"
-                    flexItem
-                    sx={{ borderColor: "#e0e0e0" }}
+      {/* Display loader while fetching data */}
+      {loading ? (
+        <Box className="flex justify-center items-center">
+          <DotLoader color="#f1780e" loading={loading} speedMultiplier={1} />
+        </Box>
+      ) : (
+        <TableContainer component={Paper} style={{ overflowX: 'auto' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    color="primary"
+                    indeterminate={
+                      selected.length > 0 && selected.length < data.length
+                    }
+                    checked={data.length > 0 && selected.length === data.length}
+                    onChange={handleSelectAll}
                   />
-                  <IconButton aria-label="delete" sx={{ color: "#dc3545" }}>
-                    <DeleteIcon onClick={() => handleDelete(row._id)} />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </Paper>
+                </TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Amount</TableCell>
+                <TableCell>Documents</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Approved By</TableCell>
+                <TableCell>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      checked={selected.indexOf(index) !== -1}
+                      onChange={() => handleSelect(index)}
+                    />
+                  </TableCell>
+                  <TableCell>{row.partstype}</TableCell>
+                  <TableCell>{row.amount}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="text"
+                      style={{ color: "#007bff", textTransform: "none" }}
+                      startIcon={<DescriptionIcon />}
+                      href={row.document} // Assuming 'document' is a URL
+                      target="_blank"
+                    >
+                      View Document
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      style={{
+                        background: "#62912C47",
+                        borderRadius: "30px",
+                        padding: "10px",
+                      }}
+                    >
+                      {row.status}
+                    </span>
+                  </TableCell>
+                  <TableCell>{row.approvedBy?.name || ""}</TableCell>
+                  <TableCell>
+                    <Box className="flex items-center justify-around rounded-lg border border-gray-300">
+                      <IconButton aria-label="view" sx={{ color: "#6c757d" }} onClick={() => handleEdit(row)}>
+                        <VisibilityIcon />
+                      </IconButton>
+                      <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={{ borderColor: "#e0e0e0" }}
+                      />
+                      <IconButton
+                        aria-label="delete"
+                        sx={{ color: "#dc3545" }}
+                        onClick={() => handleDelete(row._id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
+      {/* Modal for adding/editing finance entry */}
       <Modal
         open={open}
         onClose={handleClose}
@@ -251,7 +301,7 @@ const OfficeFinance = () => {
       >
         <Box sx={style}>
           <Typography id="modal-title" variant="h6" component="h2">
-            Add Office Finance Entry
+            {selectedFinance ? "Edit Office Finance Entry" : "Add Office Finance Entry"}
           </Typography>
 
           <Box
@@ -280,6 +330,7 @@ const OfficeFinance = () => {
               id="type"
               label="Type"
               fullWidth
+              value={finance.type}
               onChange={(e) => setFinance({ ...finance, type: e.target.value })}
             />
             <TextField
@@ -287,30 +338,26 @@ const OfficeFinance = () => {
               id="amount"
               label="Amount"
               fullWidth
-              onChange={(e) =>
-                setFinance({ ...finance, amount: e.target.value })
-              }
+              value={finance.amount}
+              onChange={(e) => setFinance({ ...finance, amount: e.target.value })}
             />
             <TextField
               required
               id="document"
-              //  label="Document"
               fullWidth
               type="file"
-              onChange={(e) =>
-                setFinance({ ...finance, document: e.target.files[0] })
-              }
+              onChange={(e) => setFinance({ ...finance, document: e.target.files[0] })}
             />
             <div className="flex justify-end mt-4">
               <Button onClick={handleClose} color="error">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                className="!bg-[#FC8908]"
-              >
-                Add Finance Entry
+              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
+                {isSaving ? (
+                  <DotLoader color="#fff" size={20} speedMultiplier={1} />
+                ) : (
+                  selectedFinance ? "Update Finance Entry" : "Add Finance Entry"
+                )}
               </Button>
             </div>
           </Box>
@@ -319,11 +366,7 @@ const OfficeFinance = () => {
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            className="mr-2 pr-2"
-          >
+          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
             Showing
           </Typography>
           <Select
@@ -340,10 +383,7 @@ const OfficeFinance = () => {
             of {data.length} entries
           </Typography>
         </div>
-        <Pagination
-          count={5}
-          onPageChange={(page) => console.log("Page:", page)}
-        />
+        <Pagination count={5} onPageChange={(page) => console.log("Page:", page)} />
       </div>
     </Box>
   );

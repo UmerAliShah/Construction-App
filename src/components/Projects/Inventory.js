@@ -4,8 +4,6 @@ import {
   Checkbox,
   IconButton,
   Typography,
-  Grid,
-  Paper,
   Select,
   MenuItem,
   Divider,
@@ -13,6 +11,13 @@ import {
   Modal,
   TextField,
   Avatar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from '@mui/material';
 import { styled } from '@mui/system';
 import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
@@ -32,7 +37,7 @@ const style = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 600, // Adjusted width to accommodate two columns
+  width: 600,
   bgcolor: 'background.paper',
   boxShadow: 24,
   p: 4,
@@ -119,44 +124,43 @@ const Inventory = () => {
         </Button>
       </div>
 
-      <Paper elevation={0} className="p-4">
-        <Grid container>
-          {/* Table Headings */}
-          <Grid item xs={12}>
-            <Box className="bg-white-50 p-2 rounded-md flex items-center justify-between">
-              <Checkbox
-                color="primary"
-                indeterminate={selected.length > 0 && selected.length < demoData.length}
-                checked={demoData.length > 0 && selected.length === demoData.length}
-                onChange={handleSelectAll}
-              />
-              <Typography className="flex-1 !font-semibold">Type of Product</Typography>
-              <Typography className="flex-1 !font-semibold">Amount Available</Typography>
-              <Typography className="flex-1 !font-semibold">More Needed</Typography>
-              <Typography className="flex-1 !font-semibold">Document</Typography>
-              <Typography className="!font-semibold">Action</Typography>
-            </Box>
-          </Grid>
-
-          {/* Table Rows */}
-          {demoData.map((row, index) => (
-            <Grid item xs={12} key={index}>
-              <Box
-                className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2"
-              >
+      <TableContainer component={Paper} elevation={0} className="p-4">
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell padding="checkbox">
                 <Checkbox
                   color="primary"
-                  checked={selected.indexOf(index) !== -1}
-                  onChange={() => handleSelect(index)}
+                  indeterminate={selected.length > 0 && selected.length < demoData.length}
+                  checked={demoData.length > 0 && selected.length === demoData.length}
+                  onChange={handleSelectAll}
                 />
-                <Typography className="flex-1">{row.product}</Typography>
-                <Typography className="flex-1">{row.amountAvailable}</Typography>
-                <Typography className="flex-1">
-                  <span style={{ background: row.moreNeeded === 'Yes' ? '#62912C47' : 'red', borderRadius: '30px', padding: '0 8px'  }}>
+              </TableCell>
+              <TableCell><Typography className="!font-semibold">Type of Product</Typography></TableCell>
+              <TableCell><Typography className="!font-semibold">Amount Available</Typography></TableCell>
+              <TableCell><Typography className="!font-semibold">More Needed</Typography></TableCell>
+              <TableCell><Typography className="!font-semibold">Document</Typography></TableCell>
+              <TableCell><Typography className="!font-semibold">Action</Typography></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {demoData.map((row, index) => (
+              <TableRow key={index} selected={selected.indexOf(index) !== -1}>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    color="primary"
+                    checked={selected.indexOf(index) !== -1}
+                    onChange={() => handleSelect(index)}
+                  />
+                </TableCell>
+                <TableCell>{row.product}</TableCell>
+                <TableCell>{row.amountAvailable}</TableCell>
+                <TableCell>
+                  <span style={{ background: row.moreNeeded === 'Yes' ? '#62912C47' : 'red', borderRadius: '30px', padding: '0 8px' }}>
                     {row.moreNeeded}
                   </span>
-                </Typography>
-                <Typography className="flex-1">
+                </TableCell>
+                <TableCell>
                   <Button
                     variant="text"
                     style={{ color: '#007bff', textTransform: 'none' }}
@@ -164,23 +168,25 @@ const Inventory = () => {
                   >
                     {row.document}
                   </Button>
-                </Typography>
-                <Box
-                  className="flex items-center justify-between rounded-lg border border-gray-300"
-                  sx={{ backgroundColor: '#f8f9fa' }}>
-                  <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                  <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </Paper>
+                </TableCell>
+                <TableCell>
+                  <Box
+                    className="flex items-center justify-between rounded-lg border border-gray-300"
+                    sx={{ backgroundColor: '#f8f9fa' }}>
+                    <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
+                      <VisibilityIcon />
+                    </IconButton>
+                    <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
+                    <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <div className="flex justify-between items-center mt-6">
         <div className="flex items-center">
@@ -240,32 +246,16 @@ const Inventory = () => {
               />
             </ImageUploadBox>
 
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <TextField required id="product-name" label="Product Name" fullWidth />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField required id="product-id" label="Product ID" fullWidth />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField required id="category" label="Category" fullWidth />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField required id="buying-price" label="Buying Price" fullWidth />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField required id="quantity" label="Quantity" fullWidth />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField required id="unit" label="Unit" fullWidth />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField required id="expiry-date" label="Expiry Date" fullWidth />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField required id="threshold-value" label="Threshold Value" fullWidth />
-              </Grid>
-            </Grid>
+            <Box className="flex flex-wrap gap-4">
+              <TextField required id="product-name" label="Product Name" fullWidth />
+              <TextField required id="product-id" label="Product ID" fullWidth />
+              <TextField required id="category" label="Category" fullWidth />
+              <TextField required id="buying-price" label="Buying Price" fullWidth />
+              <TextField required id="quantity" label="Quantity" fullWidth />
+              <TextField required id="unit" label="Unit" fullWidth />
+              <TextField required id="expiry-date" label="Expiry Date" fullWidth />
+              <TextField required id="threshold-value" label="Threshold Value" fullWidth />
+            </Box>
 
             <div className="flex justify-between mt-4">
               <Button onClick={handleClose} color="error">

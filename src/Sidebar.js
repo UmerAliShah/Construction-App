@@ -13,9 +13,8 @@ import apiClient from "./api/apiClient";
 export const fetchSites = async (setProjects) => {
   try {
     const result = await apiClient.get("/projects");
-    console.log(result, "sites");
     if (result.status === 200) {
-      setProjects(result.data); // Call setProjects if provided
+      setProjects(result.data);
     }
   } catch (error) {
     console.error("Error fetching sites:", error);
@@ -26,7 +25,6 @@ const Sidebar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { role } = useSelector((state) => state.auth);
-  console.log(role, "role");
   const [openDropdown, setOpenDropdown] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -215,15 +213,16 @@ const Sidebar = ({ toggleSidebar }) => {
                           Employees
                         </NavLink>
                         <NavLink
-                          to="/pending-employees"
+                          to="/pending-finances"
                           onClick={toggleSidebar}
+                          state={{ data: selectedProject }}
                           className={({ isActive }) =>
                             isActive
                               ? "block py-1 !text-orange-500"
                               : "block py-1"
                           }
                         >
-                          Pending Requests
+                          Pending Finances
                         </NavLink>
                         <NavLink
                           to="/vendors"

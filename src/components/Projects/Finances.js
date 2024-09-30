@@ -3,13 +3,10 @@ import {
   Box,
   Button,
   Checkbox,
-  Divider,
-  Grid,
-  IconButton,
-  MenuItem,
   Modal,
   Paper,
   Select,
+  MenuItem,
   TextField,
   Typography,
   Table,
@@ -18,38 +15,34 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  CircularProgress, // Import CircularProgress for the loader
+  IconButton,
+  Divider,
 } from "@mui/material";
 import { ReactComponent as EditIcon } from "../Icons/edit.svg";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
-import DescriptionIcon from "@mui/icons-material/Description";
+import apiClient from "../../api/apiClient";
 import Pagination from "../../Pagination";
 import { useLocation } from "react-router-dom";
-import apiClient from "../../api/apiClient";
-
-const demoData = Array(10).fill({
-  date: "26 July, 2024",
-  amount: "$15000.00",
-  document: "Site Inspection.pdf",
-});
 
 const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  boxShadow: 24,
-  p: 4,
-  borderRadius: "8px",
-};
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 400,
+    bgcolor: 'background.paper',
+    boxShadow: 24,
+    p: 4,
+    borderRadius: '8px',
+  };
 
 const Finances = () => {
   const location = useLocation();
   const selectedProject = location.state?.data;
-  console.log(selectedProject, "test sele");
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true); // Add loading state
   const initialData = {
     nameOfConcerned: "",
     type: "",
@@ -64,7 +57,7 @@ const Finances = () => {
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelected(demoData.map((_, index) => index));
+      setSelected(data.map((_, index) => index));
     } else {
       setSelected([]);
     }
@@ -98,12 +91,18 @@ const Finances = () => {
   const handleClose = () => setOpen(false);
 
   const fetchFinance = async () => {
-    const response = await apiClient.get(
-      `/finance/site/${selectedProject._id}`
-    );
-    if (response.status === 200) {
-      setData(response.data);
-      console.log(response.data, "res");
+    setLoading(true); // Show loader before fetching data
+    try {
+      const response = await apiClient.get(
+        `/finance/site/${selectedProject._id}`
+      );
+      if (response.status === 200) {
+        setData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching finance data:", error);
+    } finally {
+      setLoading(false); // Hide loader after fetching data
     }
   };
 
@@ -155,82 +154,81 @@ const Finances = () => {
         </Button>
       </Box>
       <Paper elevation={0} className="p-4">
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    color="primary"
-                    indeterminate={
-                      selected.length > 0 && selected.length < demoData.length
-                    }
-                    checked={
-                      demoData.length > 0 && selected.length === demoData.length
-                    }
-                    onChange={handleSelectAll}
-                  />
-                </TableCell>
-                <TableCell>Department Type</TableCell>
-                <TableCell>Name of Person Concerned</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Amount Given</TableCell>
-                <TableCell>Total Given So Far</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Approved By</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.map((row, index) => (
-                <TableRow key={row.id}>
+        {loading ? (
+          <Box className="flex justify-center my-6">
+            <CircularProgress color="primary" /> {/* Show loader while loading */}
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
                   <TableCell padding="checkbox">
                     <Checkbox
                       color="primary"
-                      checked={selected.indexOf(index) !== -1}
-                      onChange={() => handleSelect(index)}
+                      indeterminate={
+                        selected.length > 0 && selected.length < data.length
+                      }
+                      checked={data.length > 0 && selected.length === data.length}
+                      onChange={handleSelectAll}
                     />
                   </TableCell>
-                  <TableCell className="flex-1">{row.department}</TableCell>
-                  <TableCell className="flex-1">
-                    {row.nameOfConcerned?.name || "no name"}
-                  </TableCell>
-                  <TableCell className="flex-1">{row.partstype}</TableCell>
-                  <TableCell className="flex-1">{row.amount}</TableCell>
-                  <TableCell className="flex-1">{row.amount}</TableCell>
-                  <TableCell className="flex-1">
-                    <span
-                      style={{
-                        background: "#62912C47",
-                        borderRadius: "40px",
-                        padding: "10px",
-                      }}
-                    >
-                      {row.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="flex-1">
-                    {row.approvedBy?.name || "Not Approved"}
-                  </TableCell>
-                  <TableCell
-                    className="flex items-center justify-between rounded-lg border border-gray-300"
-                    sx={{ backgroundColor: "#f8f9fa" }}
-                  >
-                    <IconButton aria-label="edit" sx={{ color: "#6c757d" }}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
-                      <VisibilityIcon />
-                    </IconButton>
-                    <IconButton aria-label="delete" sx={{ color: "#dc3545" }}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
+                  <TableCell>Department Type</TableCell>
+                  <TableCell>Name of Person Concerned</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Amount Given</TableCell>
+                  <TableCell>Total Given So Far</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Approved By</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {data.map((row, index) => (
+                  <TableRow key={row.id}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        color="primary"
+                        checked={selected.indexOf(index) !== -1}
+                        onChange={() => handleSelect(index)}
+                      />
+                    </TableCell>
+                    <TableCell>{row.department}</TableCell>
+                    <TableCell>{row.nameOfConcerned?.name || "no name"}</TableCell>
+                    <TableCell>{row.partstype}</TableCell>
+                    <TableCell>{row.amount}</TableCell>
+                    <TableCell>{row.amount}</TableCell>
+                    <TableCell>
+                      <span
+                        style={{
+                          background: "#62912C47",
+                          borderRadius: "40px",
+                          padding: "10px",
+                        }}
+                      >
+                        {row.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>{row.approvedBy?.name || "Not Approved"}</TableCell>
+                    <TableCell>
+                        <Box
+                            className="flex items-center justify-between rounded-lg border border-gray-300"
+                            sx={{ backgroundColor: '#f8f9fa' }}>
+                            <IconButton aria-label="edit" sx={{ color: '#6c757d' }}>
+                                <VisibilityIcon />
+                            </IconButton>
+                            <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
+                            <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Paper>
 
       {/* Modal for adding new Daily Expense */}
@@ -286,7 +284,6 @@ const Finances = () => {
             <TextField
               required
               id="document"
-              //  label="Document"
               fullWidth
               type="file"
               onChange={(e) =>
@@ -297,11 +294,7 @@ const Finances = () => {
               <Button onClick={handleClose} color="error">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                className="!bg-[#FC8908]"
-              >
+              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
                 Add Finance Entry
               </Button>
             </div>
@@ -332,10 +325,7 @@ const Finances = () => {
             of 10,678 entries
           </Typography>
         </div>
-        <Pagination
-          count={5}
-          onPageChange={(page) => console.log("Page:", page)}
-        />
+        <Pagination count={5} onPageChange={(page) => console.log("Page:", page)} />
       </div>
     </Box>
   );
