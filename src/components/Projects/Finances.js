@@ -14,11 +14,15 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  CircularProgress, // Import CircularProgress for the loader
+  CircularProgress,
   IconButton,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
-import { ReactComponent as EditIcon } from "../Icons/edit.svg";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
 import apiClient from "../../api/apiClient";
@@ -26,22 +30,23 @@ import Pagination from "../../Pagination";
 import { useLocation } from "react-router-dom";
 
 const style = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    boxShadow: 24,
-    p: 4,
-    borderRadius: '8px',
-  };
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  boxShadow: 24,
+  p: 4,
+  borderRadius: "8px",
+};
 
 const Finances = () => {
   const location = useLocation();
   const selectedProject = location.state?.data;
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const initialData = {
     nameOfConcerned: "",
     type: "",
@@ -49,31 +54,36 @@ const Finances = () => {
     document: "",
   };
   const [finance, setFinance] = useState(initialData);
-  const [selected, setSelected] = useState([]);
+  const [selected, setSelected] = useState(null); // Store the selected finance record for updating
   const [employees, setEmployees] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [financeToDelete, setFinanceToDelete] = useState(null);
 
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
   };
 
   const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleClose = () => {
+    setFinance(initialData); // Reset form when closing
+    setSelected(null); // Reset selected item
+    setOpen(false);
+  };
 
   const fetchFinance = async () => {
-    setLoading(true); // Show loader before fetching data
+    setLoading(true);
     try {
-      const response = await apiClient.get(
-        `/finance/site/${selectedProject._id}`
-      );
+      const response = await apiClient.get(`/finance/site/${selectedProject._id}`);
       if (response.status === 200) {
         setData(response.data);
       }
     } catch (error) {
       console.error("Error fetching finance data:", error);
     } finally {
-      setLoading(false); // Hide loader after fetching data
+      setLoading(false);
     }
   };
 
@@ -86,10 +96,52 @@ const Finances = () => {
     fetchFinance();
   }, []);
 
+  const handleEditClick = (row) => {
+    setSelected(row); // Set the selected row for updating
+    setFinance({
+      nameOfConcerned: row.nameOfConcerned?._id || "",
+      type: row.partstype,
+      amount: row.amount,
+      document: "", // Document will be re-uploaded if needed
+    });
+    handleOpen(); // Open the modal
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await apiClient.delete(`/finance/${id}`);
+      fetchFinance(); // Refresh the data after deletion
+    } catch (error) {
+      console.error("Error deleting finance record:", error);
+    }
+  };
+
+  const handleOpenConfirmDialog = (finance) => {
+    setFinanceToDelete(finance);
+    setOpenConfirmDialog(true);
+  };
+  
+  const handleCloseConfirmDialog = () => {
+    setFinanceToDelete(null);
+    setOpenConfirmDialog(false);
+  };
+
+  const confirmDelete = async () => {
+    if (financeToDelete) {
+      try {
+        await apiClient.delete(`/finance/${financeToDelete._id}`);
+        fetchFinance(); // Refresh data after deletion
+        handleCloseConfirmDialog(); // Close the dialog
+      } catch (error) {
+        console.error("Error deleting finance record:", error);
+      }
+    }
+  };  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    // Create formData to handle file upload (document)
     const formData = new FormData();
     formData.append("nameOfConcerned", finance.nameOfConcerned);
     formData.append("partstype", finance.type);
@@ -101,14 +153,26 @@ const Finances = () => {
     }
 
     try {
-      await apiClient.post("/finance", formData);
+      if (selected) {
+        // Update existing finance
+        await apiClient.put(`/finance/${selected._id}`, formData);
+      } else {
+        // Create new finance
+        await apiClient.post("/finance", formData);
+      }
       handleClose();
       fetchFinance();
-      setFinance(initialData);
     } catch (error) {
-      console.error("Error adding finance record:", error);
+      console.error("Error adding/updating finance record:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const paginatedData = data.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
 
   return (
     <Box className="p-6">
@@ -127,7 +191,7 @@ const Finances = () => {
       <Paper elevation={0} className="p-4">
         {loading ? (
           <Box className="flex justify-center my-6">
-            <CircularProgress color="primary" /> {/* Show loader while loading */}
+            <CircularProgress color="primary" />
           </Box>
         ) : (
           <TableContainer>
@@ -144,7 +208,7 @@ const Finances = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.map((row, index) => (
+                {paginatedData.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell>{row.department}</TableCell>
                     <TableCell>{row.nameOfConcerned?.name || "no name"}</TableCell>
@@ -163,17 +227,22 @@ const Finances = () => {
                     </TableCell>
                     <TableCell>{row.approvedBy?.name || "Not Approved"}</TableCell>
                     <TableCell>
-                        <Box
-                            className="flex items-center justify-between rounded-lg border border-gray-300"
-                            sx={{ backgroundColor: '#f8f9fa' }}>
-                            <IconButton aria-label="edit" sx={{ color: '#6c757d' }}>
-                                <VisibilityIcon />
-                            </IconButton>
-                            <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                            <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </Box>
+                      <Box
+                        className="flex items-center justify-around rounded-lg border border-gray-300"
+                        sx={{ backgroundColor: "#f8f9fa" }}
+                      >
+                        <IconButton
+                          aria-label="edit"
+                          sx={{ color: "#6c757d" }}
+                          onClick={() => handleEditClick(row)} // Edit action
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                        <Divider orientation="vertical" flexItem sx={{ borderColor: "#e0e0e0" }} />
+                        <IconButton aria-label="delete" sx={{ color: "#dc3545" }} onClick={() => handleOpenConfirmDialog(row)} >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -183,7 +252,7 @@ const Finances = () => {
         )}
       </Paper>
 
-      {/* Modal for adding new Daily Expense */}
+      {/* Modal for adding/updating Daily Expense */}
       <Modal
         open={open}
         onClose={handleClose}
@@ -192,7 +261,7 @@ const Finances = () => {
       >
         <Box sx={style}>
           <Typography id="modal-title" variant="h6" component="h2">
-            Add Office Finance Entry
+            {selected ? "Update Office Finance Entry" : "Add Office Finance Entry"}
           </Typography>
           <Box
             component="form"
@@ -222,6 +291,7 @@ const Finances = () => {
               id="type"
               label="Type"
               fullWidth
+              value={finance.type}
               onChange={(e) => setFinance({ ...finance, type: e.target.value })}
             />
             <TextField
@@ -229,12 +299,12 @@ const Finances = () => {
               id="amount"
               label="Amount"
               fullWidth
+              value={finance.amount}
               onChange={(e) =>
                 setFinance({ ...finance, amount: e.target.value })
               }
             />
             <TextField
-              required
               id="document"
               fullWidth
               type="file"
@@ -246,39 +316,47 @@ const Finances = () => {
               <Button onClick={handleClose} color="error">
                 Cancel
               </Button>
-              <Button type="submit" variant="contained" className="!bg-[#FC8908]">
-                Add Finance Entry
+              <Button type="submit" variant="contained" className="!bg-[#FC8908]" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  selected ? "Update Finance" : "Add Finance"
+                )}
               </Button>
             </div>
           </Box>
         </Box>
       </Modal>
 
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            className="mr-2 pr-2"
-          >
-            Showing
-          </Typography>
-          <Select
-            value={entriesPerPage}
-            onChange={handleEntriesChange}
-            size="small"
-            className="mr-2 dropdown-svg bg-orange-400 text-white"
-          >
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-          </Select>
-          <Typography variant="body2" color="textSecondary">
-            of 10,678 entries
-          </Typography>
-        </div>
-        <Pagination count={5} onPageChange={(page) => console.log("Page:", page)} />
-      </div>
+      <Dialog
+        open={openConfirmDialog}
+        onClose={handleCloseConfirmDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        >
+        <DialogTitle id="alert-dialog-title">{"Confirm Delete"}</DialogTitle>
+        <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this finance record?
+            </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={handleCloseConfirmDialog} color="primary">
+            Cancel
+            </Button>
+            <Button onClick={confirmDelete} color="error" autoFocus>
+            Delete
+            </Button>
+        </DialogActions>
+        </Dialog>
+
+      <Pagination
+        totalEntries={data.length}
+        entriesPerPage={entriesPerPage}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onEntriesPerPageChange={handleEntriesChange}
+      />
     </Box>
   );
 };

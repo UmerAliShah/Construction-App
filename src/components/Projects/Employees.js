@@ -19,7 +19,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  CircularProgress, // Import CircularProgress for loader
+  CircularProgress,
 } from "@mui/material";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
@@ -33,9 +33,10 @@ const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1); // Manage the current page state
   const [openDialog, setOpenDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  const [loading, setLoading] = useState(true); // Add loading state for data fetching
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -58,14 +59,15 @@ const Employees = () => {
   }, [selectedProject]);
 
   const fetchUsers = async () => {
-    setLoading(true); // Set loading to true before fetching data
+    setLoading(true);
     const response = await apiClient.get("/users/");
     setEmployees(response.data);
-    setLoading(false); // Set loading to false once data is fetched
+    setLoading(false);
   };
 
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
+    setCurrentPage(1); // Reset page to 1 when changing entries per page
   };
 
   const handleViewEmployee = (id) => {
@@ -93,11 +95,16 @@ const Employees = () => {
     setOpenDialog(false);
   };
 
+  const paginatedEmployees = employees.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-          {isEmployeesPage?"Office" :"Projects"} &gt; Employees
+          {isEmployeesPage ? "Office" : "Projects"} &gt; Employees
         </Typography>
         <Button
           variant="contained"
@@ -118,8 +125,7 @@ const Employees = () => {
       <Paper elevation={0} className="p-4">
         {loading ? (
           <Box className="flex justify-center my-6">
-            <CircularProgress color="primary" />{" "}
-            {/* Circular progress shown while loading */}
+            <CircularProgress color="primary" />
           </Box>
         ) : (
           <TableContainer component={Paper} style={{ overflowX: "auto" }}>
@@ -135,7 +141,7 @@ const Employees = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {employees.map((employee, index) => (
+                {paginatedEmployees.map((employee, index) => (
                   <TableRow key={index}>
                     <TableCell>{employee.name}</TableCell>
                     <TableCell>{employee.employeeId}</TableCell>
@@ -144,7 +150,7 @@ const Employees = () => {
                     <TableCell>
                       <span
                         style={{
-                          background: "#62912C47",
+                          background: employee.status === "pending" ? "orange" : "#62912C47",
                           borderRadius: "30px",
                           padding: "10px",
                         }}
@@ -183,34 +189,13 @@ const Employees = () => {
         )}
       </Paper>
 
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            className="mr-2 pr-2"
-          >
-            Showing
-          </Typography>
-          <Select
-            value={entriesPerPage}
-            onChange={handleEntriesChange}
-            size="small"
-            className="mr-2 dropdown-svg bg-orange-400 text-white"
-          >
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-          </Select>
-          <Typography variant="body2" color="textSecondary">
-            of {employees.length} entries
-          </Typography>
-        </div>
-        <Pagination
-          count={5}
-          onPageChange={(page) => console.log("Page:", page)}
-        />
-      </div>
+      <Pagination
+        totalEntries={employees.length}
+        entriesPerPage={entriesPerPage}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onEntriesPerPageChange={handleEntriesChange}
+      />
 
       {/* Confirmation Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>

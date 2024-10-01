@@ -17,13 +17,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import Pagination from "../../Pagination";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
 import DescriptionIcon from "@mui/icons-material/Description";
 import apiClient from "../../api/apiClient";
 import Toast from "../Toast";
 import { DotLoader } from "react-spinners"; // Import DotLoader
+import Pagination from "../../Pagination"; // Your new Pagination component
 
 const style = {
   position: "absolute",
@@ -60,6 +60,7 @@ const OfficeFinance = () => {
 
   const [finance, setFinance] = useState(initialData);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
@@ -157,6 +158,11 @@ const OfficeFinance = () => {
     fetchUsers();
   }, []);
 
+  const paginatedData = data.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
+
   return (
     <Box className="p-6">
       {showToast ? <Toast bg={toastData.bg} message={toastData.message} /> : null}
@@ -193,7 +199,7 @@ const OfficeFinance = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {data.map((row, index) => (
+              {paginatedData.map((row, index) => (
                 <TableRow key={index}>
                   <TableCell>{row.partstype}</TableCell>
                   <TableCell>{row.amount}</TableCell>
@@ -318,26 +324,15 @@ const OfficeFinance = () => {
         </Box>
       </Modal>
 
+      {/* Updated Pagination */}
       <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
-          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
-            Showing
-          </Typography>
-          <Select
-            value={entriesPerPage}
-            onChange={handleEntriesChange}
-            size="small"
-            className="mr-2 dropdown-svg bg-orange-400 text-white"
-          >
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-          </Select>
-          <Typography variant="body2" color="textSecondary">
-            of {data.length} entries
-          </Typography>
-        </div>
-        <Pagination count={5} onPageChange={(page) => console.log("Page:", page)} />
+        <Pagination
+          totalEntries={data.length}
+          entriesPerPage={entriesPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onEntriesPerPageChange={handleEntriesChange}
+        />
       </div>
     </Box>
   );

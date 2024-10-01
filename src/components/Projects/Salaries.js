@@ -41,6 +41,7 @@ const Salaries = () => {
   const [data, setData] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -65,6 +66,11 @@ const Salaries = () => {
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
+  const paginatedData = data.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
 
   return (
     <Box className="p-6">
@@ -96,7 +102,7 @@ const Salaries = () => {
           </Grid>
 
           {/* Table Rows */}
-          {data.map((row, index) => (
+          {paginatedData.map((row, index) => (
             <Grid item xs={12} key={index}>
               <Box className="shadow-sm rounded-lg p-2 flex items-center justify-between border-b-2 my-2">
                 <Typography className="flex-1">{row.name}</Typography>
@@ -185,34 +191,13 @@ const Salaries = () => {
         </Box>
       </Modal>
 
-      <Box className="flex justify-between items-center mt-6">
-        <Box className="flex items-center">
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            className="mr-2 pr-2"
-          >
-            Showing
-          </Typography>
-          <Select
-            value={entriesPerPage}
-            onChange={handleEntriesChange}
-            size="small"
-            className="mr-2 dropdown-svg bg-orange-400 text-white"
-          >
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-          </Select>
-          <Typography variant="body2" color="textSecondary">
-            of 10,678 entries
-          </Typography>
-        </Box>
-        <Pagination
-          count={5}
-          onPageChange={(page) => console.log("Page:", page)}
+      <Pagination
+        totalEntries={data.length}
+        entriesPerPage={entriesPerPage}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onEntriesPerPageChange={setEntriesPerPage}
         />
-      </Box>
     </Box>
   );
 };

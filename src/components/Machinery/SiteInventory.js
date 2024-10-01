@@ -40,6 +40,7 @@ const SiteInventory = () => {
   const [loading, setLoading] = useState(true);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState({
     machineryName: '',
     type: '',
@@ -87,6 +88,11 @@ const SiteInventory = () => {
     handleClose();
   };
 
+  const paginatedData = data.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
+
   return (
     <Box className="p-6">
       <Box className="flex justify-between items-center mb-4">
@@ -101,7 +107,7 @@ const SiteInventory = () => {
           Create a New Project
         </Button>
       </Box>
-      <Paper elevation={0} className="p-4">
+      <Paper elevation={0}>
         <TableContainer component={Paper} sx={{ maxHeight: 400, overflowY: 'auto' }}>
           <Table stickyHeader aria-label="site inventory table">
             <TableHead>
@@ -125,7 +131,7 @@ const SiteInventory = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                data.map((row, index) => (
+                paginatedData.map((row, index) => (
                   <TableRow key={index} hover>
                     <TableCell>{row.name}</TableCell>
                     <TableCell>{row.type}</TableCell>
@@ -134,16 +140,38 @@ const SiteInventory = () => {
                         variant="text"
                         style={{ color: '#007bff', textTransform: 'none' }}
                         startIcon={<DescriptionIcon />}
+                        href={row.document}
+                        target="_blank"
                       >
-                        {row.Document}
+                        View Document
                       </Button>
                     </TableCell>
-                    <TableCell sx={{ background: '#62912C47', borderRadius: '30px', padding: '0 8px' }}>
-                      {row.working ? 'Yes' : 'No'}
+                    <TableCell>
+                    <Button
+                        variant="contained"
+                        size="small"
+                        style={{
+                          backgroundColor: "#ffcc80",
+                          color: "#f57c00",
+                          borderRadius: "16px",
+                        }}
+                      >
+                        {row.working ? 'Yes' : 'No'}
+                      </Button>
                     </TableCell>
                     <TableCell>{row.trackingNumber}</TableCell>
-                    <TableCell sx={{ background: '#62912C47', borderRadius: '30px', padding: '0 8px' }}>
-                      {row.partDemand ? 'Yes' : 'No'}
+                    <TableCell>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            style={{
+                            backgroundColor: "#ffcc80",
+                            color: "#f57c00",
+                            borderRadius: "16px",
+                            }}
+                        >
+                            {row.partDemand ? 'Yes' : 'No'}
+                        </Button>
                     </TableCell>
                     <TableCell>{row.partsDemandType}</TableCell>
                     <TableCell>
@@ -290,22 +318,13 @@ const SiteInventory = () => {
               </Box>
           </Modal>
 
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
-          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
-            Showing
-          </Typography>
-          <Select value={entriesPerPage} onChange={handleEntriesChange} size="small" className="mr-2 dropdown-svg bg-orange-400 text-white">
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-          </Select>
-          <Typography variant="body2" color="textSecondary">
-            of {data.length} entries
-          </Typography>
-        </div>
-        <Pagination count={Math.ceil(data.length / entriesPerPage)} onPageChange={(page) => console.log('Page:', page)} />
-      </div>
+          <Pagination
+            totalEntries={data.length}
+            entriesPerPage={entriesPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onEntriesPerPageChange={setEntriesPerPage}
+            />
     </Box>
   );
 };

@@ -39,6 +39,7 @@ const MachineryFinance = () => {
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [newProject, setNewProject] = useState({
     referenceNumber: '',
     partsDemandedType: '',
@@ -111,6 +112,11 @@ const MachineryFinance = () => {
     handleClose();
   };
 
+  const paginatedData = data.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
+
   return (
     <Box className="p-6">
       <Box className="flex justify-between items-center mb-4">
@@ -145,7 +151,7 @@ const MachineryFinance = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.map((row, index) => (
+                {paginatedData.map((row, index) => (
                   <TableRow key={index} hover>
                     <TableCell>{row.referenceNumber}</TableCell>
                     <TableCell>{row.partsDemandedType}</TableCell>
@@ -223,11 +229,6 @@ const MachineryFinance = () => {
                 onChange={handleChange}
                 required
             />
-            {newProject.document && (
-              <Typography variant="body2">
-                Selected File: {newProject.document.name}
-              </Typography>
-            )}
             <TextField
               name="date"
               label="Date"
@@ -249,28 +250,13 @@ const MachineryFinance = () => {
         </Box>
       </Modal>
 
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
-          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
-            Showing
-          </Typography>
-          <Select
-            value={entriesPerPage}
-            onChange={handleEntriesChange}
-            size="small"
-            className="mr-2 dropdown-svg bg-orange-400 text-white"
-          >
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-          </Select>
-          <Typography variant="body2" color="textSecondary">
-            of {/* Update this to reflect actual total entries */}
-            {data.length} entries
-          </Typography>
-        </div>
-        <Pagination count={5} onPageChange={(page) => console.log('Page:', page)} />
-      </div>
+      <Pagination
+            totalEntries={data.length}
+            entriesPerPage={entriesPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onEntriesPerPageChange={setEntriesPerPage}
+            />
     </Box>
   );
 };

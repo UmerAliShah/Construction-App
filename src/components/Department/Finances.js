@@ -4,7 +4,6 @@ import {
   Button,
   CircularProgress,
   Divider,
-  Grid,
   IconButton,
   MenuItem,
   Modal,
@@ -19,8 +18,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import Pagination from "../../Pagination";
-import { ReactComponent as EditIcon } from "../Icons/edit.svg";
+import Pagination from "../../Pagination"; // Importing your custom pagination component
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
 import apiClient from "../../api/apiClient";
@@ -42,6 +40,7 @@ const Finances = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -65,6 +64,7 @@ const Finances = () => {
 
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
+    setCurrentPage(1); // Reset to first page when entries per page changes
   };
 
   const handleOpen = () => {
@@ -156,7 +156,13 @@ const Finances = () => {
         console.error('Error deleting finance entry', error);
       }
     }
-  };  
+  };
+
+  // Calculate paginated data
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
 
   return (
     <div className="p-6">
@@ -164,8 +170,9 @@ const Finances = () => {
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
           Finances
         </Typography>
-        
-        {/*<div className="flex flex-row items-start md:items-center gap-4">
+      </div>
+
+       {/*<div className="flex flex-row items-start md:items-center gap-4">
           <Select
             value={statusFilter}
             onChange={handleStatusFilterChange}
@@ -187,7 +194,6 @@ const Finances = () => {
             + Add New Finance
           </Button>
         </div>*/}
-      </div>
 
       <Paper elevation={0} className="p-4">
         {loading ? (
@@ -207,24 +213,24 @@ const Finances = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredData.map((row, index) => (
+                {paginatedData.map((row, index) => (
                   <TableRow key={row.id}>
                     <TableCell>{row.nameOfConcerned || "no name"}</TableCell>
                     <TableCell>{row.role}</TableCell>
                     <TableCell>{row.employeeId}</TableCell>
                     <TableCell>{row.totalAmount}</TableCell>
                     <TableCell>
-                    <Box
-                        className="flex items-center justify-between rounded-lg border border-gray-300"
+                      <Box
+                        className="flex items-center justify-around rounded-lg border border-gray-300"
                         sx={{ backgroundColor: '#f8f9fa' }}>
                         <IconButton aria-label="edit" onClick={() => handleEdit(row)} sx={{ color: '#6c757d' }}>
-                            <VisibilityIcon />
+                          <VisibilityIcon />
                         </IconButton>
                         <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
                         <IconButton aria-label="delete" onClick={() => handleDelete(row.id)} sx={{ color: '#dc3545' }}>
-                            <DeleteIcon />
+                          <DeleteIcon />
                         </IconButton>
-                    </Box>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -234,34 +240,13 @@ const Finances = () => {
         )}
       </Paper>
 
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            className="mr-2 pr-4"
-          >
-            Showing
-          </Typography>
-          <Select
-            value={entriesPerPage}
-            onChange={handleEntriesChange}
-            size="small"
-            className="mr-2 dropdown-svg bg-orange-400 text-white"
-          >
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-          </Select>
-          <Typography variant="body2" color="textSecondary">
-            of 10,678 entries
-          </Typography>
-        </div>
         <Pagination
-          count={5}
-          onPageChange={(page) => console.log("Page:", page)}
+          totalEntries={filteredData.length}
+          entriesPerPage={entriesPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onEntriesPerPageChange={handleEntriesChange}
         />
-      </div>
 
       {/* Modal for adding or editing finance */}
       <Modal

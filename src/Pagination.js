@@ -1,56 +1,78 @@
-import React from 'react';
+import React from "react";
+import { Box, IconButton, Typography, Select, MenuItem, useMediaQuery } from "@mui/material";
+import { ReactComponent as ChevronLeftIcon } from "../src/components/Icons/left-arrow.svg";
+import { ReactComponent as ChevronRightIcon } from "../src/components/Icons/right-arrow.svg";
+import { useTheme } from "@mui/material/styles";
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  const pages = [...Array(totalPages).keys()].map((num) => num + 1);
+const Pagination = ({
+  totalEntries,
+  entriesPerPage,
+  currentPage,
+  onPageChange,
+  onEntriesPerPageChange,
+}) => {
+  const totalPages = Math.ceil(totalEntries / entriesPerPage);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
+    }
+  };
 
   return (
-    <div className="flex justify-between items-center py-4">
-      <button
-        className={`px-3 py-2 border text-gray-600 rounded-lg hover:bg-gray-300 ${
-          currentPage === 1 ? 'cursor-not-allowed text-gray-300' : ''
-        }`}
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        style={{
-          backgroundColor: currentPage === 1 ? '#e0e0e0' : 'transparent',
-        }}
-      >
-        &lt;
-      </button>
+    <Box className="flex justify-between items-center mt-6">
+      <Box className="flex items-center">
+        <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
+          Showing
+        </Typography>
+        <Select
+          value={entriesPerPage}
+          onChange={onEntriesPerPageChange}
+          size="small"
+          className="mr-2 dropdown-svg bg-orange-400 text-white"
+        >
+          <MenuItem value={10}>10</MenuItem>
+          <MenuItem value={25}>25</MenuItem>
+          <MenuItem value={50}>50</MenuItem>
+        </Select>
+        <Typography variant="body2" color="textSecondary">
+          of {totalEntries} entries
+        </Typography>
+      </Box>
 
-      <div className="flex space-x-2">
-        {pages.map((page) => (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            className={`px-3 py-2 border rounded-lg text-sm ${
-              currentPage === page
-                ? 'bg-orange-500 text-white border-orange-500'
-                : 'bg-white text-orange-500 border-orange-500 hover:bg-orange-100'
-            }`}
-            style={{
-              minWidth: '32px',
-              padding: '4px 8px',
-            }}
-          >
-            {page}
-          </button>
-        ))}
-      </div>
-
-      <button
-        className={`px-3 py-2 border text-gray-600 rounded-lg hover:bg-gray-300 ${
-          currentPage === totalPages ? 'cursor-not-allowed text-gray-300' : ''
-        }`}
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        style={{
-          backgroundColor: currentPage === totalPages ? '#e0e0e0' : 'transparent',
-        }}
-      >
-        &gt;
-      </button>
-    </div>
+      <Box className="flex items-center">
+        {!isMobile && (
+            <Typography variant="body2" color="textSecondary">
+                Page {currentPage} of {totalPages}
+            </Typography>
+            )}
+        <IconButton
+          aria-label="previous page"
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeftIcon />
+        </IconButton>
+        <Typography variant="body2" color="textSecondary">
+          {currentPage}
+        </Typography>
+        <IconButton
+          aria-label="next page"
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      </Box>
+    </Box>
   );
 };
 

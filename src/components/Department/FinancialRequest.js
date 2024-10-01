@@ -2,13 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  CircularProgress, // Import CircularProgress
-  Grid,
-  IconButton,
-  MenuItem,
-  Modal,
-  Paper,
-  Select,
+  CircularProgress,
   Table,
   TableBody,
   TableCell,
@@ -21,34 +15,25 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  MenuItem,
+  Paper,
+  Select,
 } from "@mui/material";
-import Pagination from "../../Pagination";
-import { ReactComponent as EditIcon } from "../Icons/edit.svg";
-import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
-import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
+import Pagination from "../../Pagination"; // Import your custom Pagination component
 import apiClient from "../../api/apiClient";
 
-const userRole = "Owner"; // Example user role
-
 const FinancialRequests = () => {
-  const [selected, setSelected] = useState([]);
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false); // Loader state
   const [openDialog, setOpenDialog] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
-  const [selectedRequest, setSelectedRequest] = useState(null); 
-  const [filteredData, setFilteredData] = useState([]);
-  
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelected(filteredData.map((item) => item.id));
-    } else {
-      setSelected([]);
-    }
-  };
+  const [currentPage, setCurrentPage] = useState(1); // Added currentPage state
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
+    setCurrentPage(1); // Reset page to 1 when changing entries per page
   };
 
   const handleApproveDisapprove = (requestId, action) => {
@@ -89,19 +74,25 @@ const FinancialRequests = () => {
     fetchFinance();
   }, []);
 
+  // Calculate paginated data
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
           Financial Requests
         </Typography>
-        <Button
+        {/*<Button
           variant="contained"
           className="mb-4 !bg-[#FC8908]"
           onClick={() => {}}
         >
           + Add Request
-        </Button>
+        </Button>*/}
       </div>
 
       <Paper elevation={0} className="p-4">
@@ -124,16 +115,14 @@ const FinancialRequests = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredData.map((row, index) => (
+                {paginatedData.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell className="flex-1">{row.department}</TableCell>
-                    <TableCell className="flex-1">
-                      {row.nameOfConcerned || "no name"}
-                    </TableCell>
-                    <TableCell className="flex-1">{row.partstype}</TableCell>
-                    <TableCell className="flex-1">{row.amount}</TableCell>
-                    <TableCell className="flex-1">{row.amount}</TableCell>
-                    <TableCell className="flex-1">
+                    <TableCell>{row.department}</TableCell>
+                    <TableCell>{row.nameOfConcerned || "no name"}</TableCell>
+                    <TableCell>{row.partstype}</TableCell>
+                    <TableCell>{row.amount}</TableCell>
+                    <TableCell>{row.amount}</TableCell>
+                    <TableCell>
                       <span
                         style={{
                           background: "#62912C47",
@@ -144,10 +133,7 @@ const FinancialRequests = () => {
                         {row.status}
                       </span>
                     </TableCell>
-                    <TableCell
-                      className="flex items-center justify-between rounded-lg border border-gray-300"
-                      sx={{ backgroundColor: "#f8f9fa" }}
-                    >
+                    <TableCell>
                       <Select
                         value=""
                         displayEmpty
@@ -169,15 +155,14 @@ const FinancialRequests = () => {
         )}
       </Paper>
 
-      <div className="flex justify-between items-center mt-6">
-        <Typography variant="body2" color="textSecondary" className="mr-2">
-          Showing {entriesPerPage} of {filteredData.length} entries
-        </Typography>
+      {/* Pagination Section */}
         <Pagination
-          count={5}
-          onPageChange={(page) => console.log("Page:", page)}
+          totalEntries={filteredData.length}
+          entriesPerPage={entriesPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onEntriesPerPageChange={handleEntriesChange}
         />
-      </div>
 
       {/* Confirmation Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>

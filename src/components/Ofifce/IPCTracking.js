@@ -46,6 +46,7 @@ const IPCTracking = () => {
   const [loading, setLoading] = useState(false); // Loader for fetching data
   const [submitLoading, setSubmitLoading] = useState(false); // Loader state for Add/Update submission
   const [projects, setProjects] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [newIpc, setNewIpc] = useState({
     site: "",
     ipcNumber: "",
@@ -184,6 +185,11 @@ const IPCTracking = () => {
     }
   };
 
+  const paginatedData = ipcData.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
@@ -218,7 +224,7 @@ const IPCTracking = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {ipcData.map((row) => (
+                {paginatedData.map((row) => (
                   <TableRow key={row._id}>
                     <TableCell>{row.site.name}</TableCell>
                     <TableCell>{row.ipcNumber}</TableCell>
@@ -228,7 +234,7 @@ const IPCTracking = () => {
                         variant="contained"
                         size="small"
                         style={{
-                          backgroundColor: "#ffcc80",
+                          backgroundColor: row.status === 'in-progress' ? 'orange' : "#ffcc80",
                           color: "#f57c00",
                           borderRadius: "16px",
                         }}
@@ -249,7 +255,7 @@ const IPCTracking = () => {
                     </TableCell>
                     <TableCell>
                     <Box
-                        className="flex items-center justify-between rounded-lg border border-gray-300"
+                        className="flex items-center justify-around rounded-lg border border-gray-300"
                         sx={{ backgroundColor: '#f8f9fa' }}>
                         <IconButton aria-label="edit" onClick={() => handleEditOpen(row)} sx={{ color: '#6c757d' }}>
                             <VisibilityIcon />
@@ -331,7 +337,7 @@ const IPCTracking = () => {
               displayEmpty
             >
               <MenuItem value="">Select Status</MenuItem>
-              <MenuItem value="in-proress">In-Progress</MenuItem>
+              <MenuItem value="in-progress">In-Progress</MenuItem>
               <MenuItem value="completed">Completed</MenuItem>
             </Select>
 
@@ -488,34 +494,13 @@ const IPCTracking = () => {
         </Box>
       </Modal>
 
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            className="mr-2 pr-2"
-          >
-            Showing
-          </Typography>
-          <Select
-            value={entriesPerPage}
-            onChange={handleEntriesChange}
-            size="small"
-            className="mr-2 dropdown-svg bg-orange-400 text-white"
-          >
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-          </Select>
-          <Typography variant="body2" color="textSecondary">
-            of {ipcData.length} entries
-          </Typography>
-        </div>
-        <Pagination
-          count={Math.ceil(ipcData.length / entriesPerPage)}
-          onPageChange={(page) => console.log("Page:", page)}
+      <Pagination
+        totalEntries={ipcData.length}
+        entriesPerPage={entriesPerPage}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onEntriesPerPageChange={handleEntriesChange}
         />
-      </div>
     </div>
   );
 };

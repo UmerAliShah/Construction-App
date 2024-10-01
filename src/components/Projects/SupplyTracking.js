@@ -42,6 +42,7 @@ const SupplyTracking = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const initialData = {
     refNumber: "",
@@ -103,6 +104,11 @@ const SupplyTracking = () => {
     setSubmitting(false);
   };
 
+  const paginatedData = data.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
+
   return (
     <Box className="p-6">
       <Box className="flex justify-between items-center mb-4">
@@ -132,7 +138,7 @@ const SupplyTracking = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              data.map((row, index) => (
+                paginatedData.map((row, index) => (
                 <TableRow key={row.id}>
                   <TableCell>{row.orderReferenceNumber}</TableCell>
                   <TableCell>
@@ -223,27 +229,13 @@ const SupplyTracking = () => {
         </Box>
       </Modal>
 
-      <div className="flex justify-between items-center mt-6">
-        <div className="flex items-center">
-          <Typography variant="body2" color="textSecondary" className="mr-2 pr-2">
-            Showing
-          </Typography>
-          <Select
-            value={entriesPerPage}
-            onChange={(event) => setEntriesPerPage(event.target.value)}
-            size="small"
-            className="mr-2 dropdown-svg bg-orange-400 text-white"
-          >
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-          </Select>
-          <Typography variant="body2" color="textSecondary">
-            of 10,678 entries
-          </Typography>
-        </div>
-        <Pagination />
-      </div>
+      <Pagination
+            totalEntries={data.length}
+            entriesPerPage={entriesPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onEntriesPerPageChange={setEntriesPerPage}
+            />
     </Box>
   );
 };
