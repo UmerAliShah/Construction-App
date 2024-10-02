@@ -216,7 +216,7 @@ const Finances = () => {
               <TableBody>
                 {paginatedData.map((row, index) => (
                   <TableRow key={row.id}>
-                    <TableCell>{row.nameOfConcerned || "no name"}</TableCell>
+                    <TableCell>{row.nameOfConcerned || row.machinery || "no name"}</TableCell>
                     <TableCell>{row.role}</TableCell>
                     <TableCell>{row.employeeId}</TableCell>
                     <TableCell>{row.totalAmount}</TableCell>
