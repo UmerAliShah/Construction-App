@@ -135,9 +135,10 @@ const Finances = () => {
   };
 
   // Open modal with pre-filled data for editing
-  const handleEdit = (row) => {
+  const handleEdit = async (row) => {
     setIsEdit(true);
     setEditData(row);
+    const result = await apiClient.get(`/finance/user/${row.userId}`);
     setFormData({
       department: row.department || "",
       nameOfConcerned: row.nameOfConcerned?.name || "",
@@ -148,12 +149,12 @@ const Finances = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this entry?')) {
+    if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
         await apiClient.delete(`/finance/delete/${id}`); // API call to delete
         fetchFinance(); // Refresh the finance data after deletion
       } catch (error) {
-        console.error('Error deleting finance entry', error);
+        console.error("Error deleting finance entry", error);
       }
     }
   };
@@ -172,7 +173,7 @@ const Finances = () => {
         </Typography>
       </div>
 
-       {/*<div className="flex flex-row items-start md:items-center gap-4">
+      {/*<div className="flex flex-row items-start md:items-center gap-4">
           <Select
             value={statusFilter}
             onChange={handleStatusFilterChange}
@@ -222,12 +223,25 @@ const Finances = () => {
                     <TableCell>
                       <Box
                         className="flex items-center justify-around rounded-lg border border-gray-300"
-                        sx={{ backgroundColor: '#f8f9fa' }}>
-                        <IconButton aria-label="edit" onClick={() => handleEdit(row)} sx={{ color: '#6c757d' }}>
+                        sx={{ backgroundColor: "#f8f9fa" }}
+                      >
+                        <IconButton
+                          aria-label="edit"
+                          onClick={() => handleEdit(row)}
+                          sx={{ color: "#6c757d" }}
+                        >
                           <VisibilityIcon />
                         </IconButton>
-                        <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                        <IconButton aria-label="delete" onClick={() => handleDelete(row.id)} sx={{ color: '#dc3545' }}>
+                        <Divider
+                          orientation="vertical"
+                          flexItem
+                          sx={{ borderColor: "#e0e0e0" }}
+                        />
+                        <IconButton
+                          aria-label="delete"
+                          onClick={() => handleDelete(row.id)}
+                          sx={{ color: "#dc3545" }}
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </Box>
@@ -240,13 +254,13 @@ const Finances = () => {
         )}
       </Paper>
 
-        <Pagination
-          totalEntries={filteredData.length}
-          entriesPerPage={entriesPerPage}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          onEntriesPerPageChange={handleEntriesChange}
-        />
+      <Pagination
+        totalEntries={filteredData.length}
+        entriesPerPage={entriesPerPage}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onEntriesPerPageChange={handleEntriesChange}
+      />
 
       {/* Modal for adding or editing finance */}
       <Modal

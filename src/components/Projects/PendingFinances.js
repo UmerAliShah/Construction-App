@@ -61,7 +61,7 @@ const PendingFinances = () => {
   const handleConfirmAction = async () => {
     try {
       const { requestId, action } = selectedRequest;
-      const result = await apiClient.post(`/finance/approve/${requestId}`, {
+      const result = await apiClient.put(`/finance/approve/${requestId}`, {
         status: action,
       });
       if (result.status === 200) {

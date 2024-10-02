@@ -127,9 +127,9 @@ const OfficeFinance = () => {
   };
 
   const handleEdit = (financeEntry) => {
-    setSelectedFinance(financeEntry); // Set the selected finance entry for editing
+    setSelectedFinance(financeEntry);
     setFinance({
-      nameOfConcerned: financeEntry.nameOfConcerned || "",
+      nameOfConcerned: financeEntry.nameOfConcerned._id || "",
       type: financeEntry.partstype || "",
       amount: financeEntry.amount || "",
       document: "",

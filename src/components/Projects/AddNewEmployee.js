@@ -18,8 +18,10 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import apiClient from "../../api/apiClient";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const AddNewEmployee = () => {
+  const { role: currentRole } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const [role, setRole] = useState("");
   const [roles, setRoles] = useState([
@@ -56,7 +58,7 @@ const AddNewEmployee = () => {
         try {
           const response = await apiClient.get(`/users/${id}`);
           setFormData(response.data);
-          setRole(response.data.role)
+          setRole(response.data.role);
         } catch (error) {
           console.error("Error fetching employee data:", error);
         }
@@ -126,7 +128,7 @@ const AddNewEmployee = () => {
   return (
     <Box p={4} bgcolor="#f8f9fa" className="add-employee">
       <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-        {id? "Update" : "Add New" }Employee
+        {id ? "Update" : "Add New"}Employee
       </Typography>
       <Box
         p={4}
@@ -153,6 +155,11 @@ const AddNewEmployee = () => {
                 Name
               </InputLabel>
               <TextField
+                disabled={
+                  currentRole !== "office_assistant" &&
+                  currentRole !== "owner" &&
+                  currentRole !== "owner_assistant"
+                }
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
@@ -171,6 +178,11 @@ const AddNewEmployee = () => {
                 Employee ID
               </InputLabel>
               <TextField
+                disabled={
+                  currentRole !== "office_assistant" &&
+                  currentRole !== "owner" &&
+                  currentRole !== "owner_assistant"
+                }
                 name="employeeId"
                 value={formData.employeeId}
                 onChange={handleChange}
@@ -195,6 +207,11 @@ const AddNewEmployee = () => {
                 placeholder="Enter email"
                 variant="outlined"
                 fullWidth
+                disabled={
+                  currentRole !== "office_assistant" &&
+                  currentRole !== "owner" &&
+                  currentRole !== "owner_assistant"
+                }
               />
             </Box>
           </Grid>
@@ -206,7 +223,15 @@ const AddNewEmployee = () => {
               >
                 Role
               </InputLabel>
-              <FormControl fullWidth variant="outlined">
+              <FormControl
+                fullWidth
+                variant="outlined"
+                disabled={
+                  currentRole !== "office_assistant" &&
+                  currentRole !== "owner" &&
+                  currentRole !== "owner_assistant"
+                }
+              >
                 <Select value={role} onChange={handleRoleChange} label="Role">
                   {roles.map((role, index) => (
                     <MenuItem key={index} value={role}>
@@ -226,6 +251,11 @@ const AddNewEmployee = () => {
                 Password
               </InputLabel>
               <TextField
+                disabled={
+                  currentRole !== "office_assistant" &&
+                  currentRole !== "owner" &&
+                  currentRole !== "owner_assistant"
+                }
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -254,6 +284,11 @@ const AddNewEmployee = () => {
                 Confirm Password
               </InputLabel>
               <TextField
+                disabled={
+                  currentRole !== "office_assistant" &&
+                  currentRole !== "owner" &&
+                  currentRole !== "owner_assistant"
+                }
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -289,6 +324,11 @@ const AddNewEmployee = () => {
                 Phone
               </InputLabel>
               <TextField
+                disabled={
+                  currentRole !== "office_assistant" &&
+                  currentRole !== "owner" &&
+                  currentRole !== "owner_assistant"
+                }
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
@@ -307,6 +347,11 @@ const AddNewEmployee = () => {
                 Address
               </InputLabel>
               <TextField
+                disabled={
+                  currentRole !== "office_assistant" &&
+                  currentRole !== "owner" &&
+                  currentRole !== "owner_assistant"
+                }
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
@@ -327,6 +372,11 @@ const AddNewEmployee = () => {
                 Profile Image
               </InputLabel>
               <TextField
+                disabled={
+                  currentRole !== "office_assistant" &&
+                  currentRole !== "owner" &&
+                  currentRole !== "owner_assistant"
+                }
                 type="file"
                 onChange={handleImageChange}
                 variant="outlined"
