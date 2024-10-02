@@ -136,7 +136,7 @@ const Employees = () => {
                   <TableCell>ID</TableCell>
                   <TableCell>Phone Number</TableCell>
                   <TableCell>Role</TableCell>
-                  <TableCell>Status</TableCell>
+                  <TableCell>Salary Status</TableCell>
                   <TableCell>Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -150,12 +150,12 @@ const Employees = () => {
                     <TableCell>
                       <span
                         style={{
-                          background: employee.status === "pending" ? "orange" : "#62912C47",
+                          background: employee.currentMonthPayStatus === "pending" ? "orange" : "#62912C47",
                           borderRadius: "30px",
                           padding: "10px",
                         }}
                       >
-                        {employee.status}
+                        {employee.currentMonthPayStatus}
                       </span>
                     </TableCell>
                     <TableCell>
