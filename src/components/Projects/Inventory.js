@@ -51,6 +51,7 @@ const Inventory = () => {
     try {
       const response = await apiClient.get(`/inventory/site/${id}`);
       setInventoryData(response.data);
+      console.log(response.data,'res')
     } catch (error) {
       console.error('Error fetching inventory data:', error);
     }
@@ -58,7 +59,7 @@ const Inventory = () => {
 
   useEffect(() => {
     fetchInventoryData(); // Load data when the component mounts
-  }, []);
+  }, [id]);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -84,9 +85,11 @@ const Inventory = () => {
       data.append('name', formData.name);
       data.append('amount', formData.amount);
       data.append('demand', formData.demand);
+      // data.append('type', formData.type);
+      // data.append('quantity', formData.quantity);
       data.append('site', id);
       if (formData.document) {
-        data.append('document', formData.document); // Append the file to FormData
+        data.append('document', formData.document);
       }
 
       // Send the form data to the backend
