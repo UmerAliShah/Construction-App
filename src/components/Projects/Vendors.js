@@ -21,6 +21,7 @@ import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
 import { styled } from '@mui/system';
 import Pagination from '../../Pagination';
 import apiClient from '../../api/apiClient';
+import { useLocation } from 'react-router-dom';
 
 const style = {
   position: 'absolute',
@@ -46,6 +47,8 @@ const ImageUploadBox = styled(Box)(({ theme }) => ({
 }));
 
 const Vendors = () => {
+  const location = useLocation();
+  const selectedProject = location.state?.data;
   const [vendors, setVendors] = useState([]);
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -62,20 +65,26 @@ const Vendors = () => {
   });
 
   useEffect(() => {
-    fetchVendors();
-  }, []);
-
-  const fetchVendors = async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get('/users/vendors');
-      setVendors(response.data);
-    } catch (error) {
-      console.error('Error fetching vendors', error);
-    } finally {
-      setLoading(false);
+    if (selectedProject) {
+      // Filter employees with role "vendor"
+      const vendors = selectedProject.employees.filter(employee => employee.role === 'vendor');
+      setVendors(vendors);
     }
-  };
+    // fetchVendors();
+  }, [selectedProject]);
+  
+
+  // const fetchVendors = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await apiClient.get('/users/vendors');
+  //     setVendors(response.data);
+  //   } catch (error) {
+  //     console.error('Error fetching vendors', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -107,7 +116,7 @@ const Vendors = () => {
     event.preventDefault();
     try {
       await apiClient.post('/vendors', newVendor);
-      fetchVendors();
+      // fetchVendors();
       handleClose();
     } catch (error) {
       console.error('Error creating vendor', error);

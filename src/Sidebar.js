@@ -228,6 +228,7 @@ const Sidebar = ({ toggleSidebar }) => {
                         <NavLink
                           to={`/${item._id}/vendors`}
                           onClick={toggleSidebar}
+                          state={{ data: selectedProject }}
                           className={({ isActive }) =>
                             isActive
                               ? "block py-1 !text-orange-500"

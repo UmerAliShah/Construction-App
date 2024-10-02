@@ -156,7 +156,7 @@ const SiteInventory = () => {
                           borderRadius: "16px",
                         }}
                       >
-                        {row.working ? 'Yes' : 'No'}
+                        {row.workingOn?.name || 'Free To Use'}
                       </Button>
                     </TableCell>
                     <TableCell>{row.trackingNumber}</TableCell>
