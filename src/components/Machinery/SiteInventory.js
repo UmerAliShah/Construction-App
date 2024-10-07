@@ -16,6 +16,11 @@ import {
     TableRow,
     TextField,
     Typography,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import Pagination from '../../Pagination';
@@ -42,38 +47,57 @@ const SiteInventory = () => {
     const [open, setOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [formData, setFormData] = useState({
-        machineryName: '',
+        name: '',
         type: '',
         working: '',
         trackingNumber: '',
-        partsDemandType: [{ partDemandType: "", status: "" }],  // Changed to an array for multiple demand part types
+        partsDemandType: [{ partDemandType: "", status: "" }],
         status: '',
         document: null,
     });
+    const [filter, setFilter] = useState(''); // Filter state
+
+    // State for Delete Confirmation Dialog
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+
+    // State for Edit Modal
+    const [openEditModal, setOpenEditModal] = useState(false);
+    const [itemToEdit, setItemToEdit] = useState(null);
+    const [editFormData, setEditFormData] = useState({
+        name: '',
+        type: '',
+        working: '',
+        trackingNumber: '',
+        partsDemandType: [{ partDemandType: "", status: "" }],
+        status: '',
+        document: null,
+    });
+    const [editing, setEditing] = useState(false);
+
+    // Fetching data from the backend
+    const fetchData = async () => {
+        try {
+            const response = await apiClient.get('/machinery');
+            setData(response.data);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching machinery:', error);
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        // Fetching data from the backend
-        const fetchData = async () => {
-            try {
-                const response = await apiClient.get('/machinery');
-                setData(response.data);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching machinery:', error);
-                setLoading(false);
-            }
-        };
-
         fetchData();
     }, []);
 
     const handleInputChange = (event) => {
         const { name, value, files } = event.target;
         if (name === 'document') {
-            // For file input, use files instead of value
             setFormData({
                 ...formData,
-                [name]: files[0], // Assuming you are only uploading one file
+                [name]: files[0],
             });
         } else {
             setFormData({
@@ -81,85 +105,199 @@ const SiteInventory = () => {
                 [name]: value,
             });
         }
-    };    
+    };
 
-    // Handle input change for demand part types
     const handleDemandPartTypeChange = (index, key, value) => {
-        // Create a copy of the current partsDemandType array
         const newDemandPartTypes = [...formData.partsDemandType];
-
-        // If the object at the current index doesn't exist, create one
         if (!newDemandPartTypes[index]) {
             newDemandPartTypes[index] = { partDemandType: '', status: '' };
         }
-
-        // Update the specific key (partDemandType or status) for the current object
         newDemandPartTypes[index] = {
             ...newDemandPartTypes[index],
-            [key]: value
+            [key]: value,
         };
-
-        // Set the updated array in the formData state
         setFormData({ ...formData, partsDemandType: newDemandPartTypes });
     };
 
-    // Add new demand part type field
     const handleAddDemandPartType = () => {
         setFormData({
             ...formData,
-            partsDemandType: [...formData.partsDemandType, ''],
+            partsDemandType: [...formData.partsDemandType, { partDemandType: '', status: '' }],
         });
     };
 
-    // Remove a demand part type field
     const handleRemoveDemandPartType = (index) => {
         const newDemandPartTypes = formData.partsDemandType.filter((_, i) => i !== index);
         setFormData({ ...formData, partsDemandType: newDemandPartTypes });
     };
 
+    const handleFilterChange = (event) => {
+        setFilter(event.target.value);
+    };
+
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
+
     const handleSubmit = async (event) => {
-        event.preventDefault();  // Prevent default form submission behavior
+        event.preventDefault();
 
         const payload = new FormData();
-        payload.append("machineryName", formData.machineryName)
-        payload.append("type", formData.type)
-        payload.append("trackingNumber", formData.trackingNumber)
-        payload.append("document", formData.document)
-        if (Array.isArray(formData.partsDemandType)) {
-            formData.partsDemandType.forEach((part, index) => {
-                payload.append(`partsDemandType[${index}][partDemandType]`, part.partDemandType);
-                payload.append(`partsDemandType[${index}][status]`, part.status);
+        payload.append('name', formData.name);
+        payload.append('type', formData.type);
+        payload.append('trackingNumber', formData.trackingNumber);
+        payload.append('document', formData.document);
+
+        formData.partsDemandType.forEach((part, index) => {
+            payload.append(`partsDemandType[${index}][partDemandType]`, part.partDemandType);
+            payload.append(`partsDemandType[${index}][status]`, part.status);
+        });
+
+        try {
+            setLoading(true); // Show CircularProgress
+            const response = await apiClient.post('/machinery', payload);
+            console.log('Response from server:', response.data);
+            setData([...data, response.data]); // Update state with new item
+            setFormData({
+                name: '',
+                type: '',
+                working: '',
+                trackingNumber: '',
+                partsDemandType: [{ partDemandType: '', status: '' }],
+                status: '',
+                document: null,
+            });
+            handleClose();
+        } catch (error) {
+            console.error('Error submitting the form:', error);
+        } finally {
+            setLoading(false); // Hide CircularProgress
+        }
+    };
+
+    const paginatedData = data
+        .filter((row) => (filter === '' || row.workingOn?.name === filter))
+        .slice((currentPage - 1) * entriesPerPage, currentPage * entriesPerPage);
+
+    // Delete Handlers
+    const handleDeleteClick = (item) => {
+        setItemToDelete(item);
+        setOpenDeleteDialog(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return;
+
+        try {
+            setDeleting(true);
+            await apiClient.delete(`/machinery/${itemToDelete._id}`);
+            setData(data.filter((item) => item.id !== itemToDelete.id));
+            setOpenDeleteDialog(false);
+            setItemToDelete(null);
+        } catch (error) {
+            console.error('Error deleting the item:', error);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setOpenDeleteDialog(false);
+        setItemToDelete(null);
+    };
+
+    // Edit Handlers
+    const handleEditClick = (item) => {
+        setItemToEdit(item);
+        setEditFormData({
+            name: item.name || '',
+            type: item.type || '',
+            working: item.working || '',
+            trackingNumber: item.trackingNumber || '',
+            partsDemandType: item.partsDemandType.length > 0 ? item.partsDemandType : [{ partDemandType: "", status: "" }],
+            status: item.status || '',
+            document: null, // Assuming you might want to upload a new document
+        });
+        setOpenEditModal(true);
+    };
+
+    const handleEditInputChange = (event) => {
+        const { name, value, files } = event.target;
+        if (name === 'document') {
+            setEditFormData({
+                ...editFormData,
+                [name]: files[0],
             });
         } else {
-            console.error('partsDemandType is not an array');
+            setEditFormData({
+                ...editFormData,
+                [name]: value,
+            });
         }
-      
-        try {
-          // Post the form data to the API
-          const response = await apiClient.post('/machinery', payload);
-          console.log('Response from server:', response.data);
-          // Reset the form after submission or handle success response
-          setFormData({
-            machineryName: '',
-            type: '',
-            working: '',
-            trackingNumber: '',
-            partsDemandType: [{ partDemandType: '', status: '' }],  // Reset to default with one empty object
-            status: '',
-            document: null,
-          });
-          handleClose();  // Close the modal after successful submission
-        } catch (error) {
-          console.error('Error submitting the form:', error);
-        }
-      };      
+    };
 
-    const paginatedData = data.slice(
-        (currentPage - 1) * entriesPerPage,
-        currentPage * entriesPerPage
-    );
+    const handleEditDemandPartTypeChange = (index, key, value) => {
+        const newDemandPartTypes = [...editFormData.partsDemandType];
+        if (!newDemandPartTypes[index]) {
+            newDemandPartTypes[index] = { partDemandType: '', status: '' };
+        }
+        newDemandPartTypes[index] = {
+            ...newDemandPartTypes[index],
+            [key]: value,
+        };
+        setEditFormData({ ...editFormData, partsDemandType: newDemandPartTypes });
+    };
+
+    const handleEditAddDemandPartType = () => {
+        setEditFormData({
+            ...editFormData,
+            partsDemandType: [...editFormData.partsDemandType, { partDemandType: '', status: '' }],
+        });
+    };
+
+    const handleEditRemoveDemandPartType = (index) => {
+        const newDemandPartTypes = editFormData.partsDemandType.filter((_, i) => i !== index);
+        setEditFormData({ ...editFormData, partsDemandType: newDemandPartTypes });
+    };
+
+    console.log(editFormData);
+    const handleEditSubmit = async (event) => {
+        event.preventDefault();
+
+        const payload = new FormData();
+        payload.append('name', editFormData.name);
+        payload.append('type', editFormData.type);
+        payload.append('trackingNumber', editFormData.trackingNumber);
+        if (editFormData.document) {
+            payload.append('document', editFormData.document);
+        }
+
+        editFormData.partsDemandType.forEach((part, index) => {
+            payload.append(`partsDemandType[${index}][partDemandType]`, part.partDemandType);
+            payload.append(`partsDemandType[${index}][status]`, part.status);
+        });
+
+        try {
+            setEditing(true);
+            const response = await apiClient.put(`/machinery/${itemToEdit.id}`, payload);
+            console.log('Edit response:', response.data);
+            setData(data.map(item => item.id === itemToEdit.id ? response.data : item));
+            setEditFormData({
+                name: '',
+                type: '',
+                working: '',
+                trackingNumber: '',
+                partsDemandType: [{ partDemandType: '', status: '' }],
+                status: '',
+                document: null,
+            });
+            setOpenEditModal(false);
+            setItemToEdit(null);
+        } catch (error) {
+            console.error('Error editing the item:', error);
+        } finally {
+            setEditing(false);
+        }
+    };
 
     return (
         <Box className="p-6">
@@ -175,8 +313,28 @@ const SiteInventory = () => {
                     + Create a New Inventory
                 </Button>
             </Box>
+
+            {/* Filter Dropdown */}
+            <Box className="mb-4">
+                <Typography variant="h6">Filter by Working On</Typography>
+                <Select
+                    value={filter}
+                    onChange={handleFilterChange}
+                    displayEmpty
+                    fullWidth
+                    sx={{ mb: 2 }}
+                >
+                    <MenuItem value="">All</MenuItem>
+                    {data.map((row, index) => (
+                        <MenuItem key={index} value={row.workingOn?.name || ''}>
+                            {row.workingOn?.name || 'Free To Use'}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </Box>
+
             <Paper elevation={0}>
-                <TableContainer component={Paper} sx={{ maxHeight: 400, overflowY: 'auto' }}>
+                <TableContainer component={Paper} sx={{ overflowY: 'auto' }}>
                     <Table stickyHeader aria-label="site inventory table">
                         <TableHead>
                             <TableRow>
@@ -219,9 +377,9 @@ const SiteInventory = () => {
                                                 variant="contained"
                                                 size="small"
                                                 style={{
-                                                    backgroundColor: "#ffcc80",
-                                                    color: "#f57c00",
-                                                    borderRadius: "16px",
+                                                    backgroundColor: '#ffcc80',
+                                                    color: '#f57c00',
+                                                    borderRadius: '16px',
                                                 }}
                                             >
                                                 {row.workingOn?.name || 'Free To Use'}
@@ -233,15 +391,21 @@ const SiteInventory = () => {
                                                 variant="contained"
                                                 size="small"
                                                 style={{
-                                                    backgroundColor: "#ffcc80",
-                                                    color: "#f57c00",
-                                                    borderRadius: "16px",
+                                                    backgroundColor: '#ffcc80',
+                                                    color: '#f57c00',
+                                                    borderRadius: '16px',
                                                 }}
                                             >
                                                 {row.partsDemandType.length > 0 ? 'Yes' : 'No'}
                                             </Button>
                                         </TableCell>
-                                        <TableCell>{row.partsDemandType.length > 0 || "-"}</TableCell>
+                                        <TableCell>
+                                            {row.partsDemandType.map((part, idx) => (
+                                                <div key={idx}>
+                                                    {part.partDemandType} - {part.status}
+                                                </div>
+                                            ))}
+                                        </TableCell>
                                         <TableCell>
                                             <span style={{ background: 'orange', borderRadius: '30px', padding: '0 8px' }}>
                                                 {row.status}
@@ -252,10 +416,10 @@ const SiteInventory = () => {
                                                 className="flex items-center justify-between rounded-lg border border-gray-300"
                                                 sx={{ backgroundColor: '#f8f9fa' }}
                                             >
-                                                <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
+                                                <IconButton aria-label="view" sx={{ color: '#6c757d' }} onClick={() => handleEditClick(row)}>
                                                     <VisibilityIcon />
                                                 </IconButton>
-                                                <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
+                                                <IconButton aria-label="delete" sx={{ color: '#dc3545' }} onClick={() => handleDeleteClick(row)}>
                                                     <DeleteIcon />
                                                 </IconButton>
                                             </Box>
@@ -284,7 +448,7 @@ const SiteInventory = () => {
                             {/* Machinery Name and Type */}
                             <Box className="flex gap-4">
                                 <TextField
-                                    name="machineryName"
+                                    name="name"
                                     label="Machinery Name"
                                     fullWidth
                                     onChange={handleInputChange}
@@ -324,7 +488,6 @@ const SiteInventory = () => {
                             </Box>
 
                             {/* Part Demand and Demand Part Type */}
-                            {/* Part Demand Type and Status Fields */}
                             {formData.partsDemandType.map((partType, index) => (
                                 <Box className="flex gap-4" key={index}>
                                     <TextField
@@ -379,13 +542,156 @@ const SiteInventory = () => {
                             <Button onClick={handleClose} color="error">
                                 Cancel
                             </Button>
-                            <Button type="submit" variant="contained" className="!bg-[#FC8908]">
-                                Submit
+                            <Button type="submit" variant="contained" className="!bg-[#FC8908]" disabled={loading}>
+                                {loading ? <CircularProgress size={24} /> : 'Submit'}
                             </Button>
                         </Box>
                     </form>
                 </Box>
             </Modal>
+
+            {/* Modal for editing an inventory item */}
+            <Modal
+                open={openEditModal}
+                onClose={() => setOpenEditModal(false)}
+                aria-labelledby="edit-modal-title"
+                aria-describedby="edit-modal-description"
+            >
+                <Box sx={style}>
+                    <Typography id="edit-modal-title" variant="h6" component="h2">
+                        Edit Inventory
+                    </Typography>
+                    <form onSubmit={handleEditSubmit} className="flex flex-col gap-4 mt-4">
+                        <Box className="flex flex-col gap-4">
+                            {/* Machinery Name and Type */}
+                            <Box className="flex gap-4">
+                                <TextField
+                                    name="name"
+                                    label="Machinery Name"
+                                    fullWidth
+                                    value={editFormData.name}
+                                    onChange={handleEditInputChange}
+                                    required
+                                />
+                                <TextField
+                                    name="type"
+                                    label="Type"
+                                    fullWidth
+                                    value={editFormData.type}
+                                    onChange={handleEditInputChange}
+                                    required
+                                />
+                            </Box>
+
+                            {/* Working and Tracking Number */}
+                            <Box className="flex gap-4">
+                                <TextField
+                                    select
+                                    name="working"
+                                    label="Working"
+                                    fullWidth
+                                    value={editFormData.working}
+                                    onChange={handleEditInputChange}
+                                    required
+                                >
+                                    <MenuItem value="">Select Working</MenuItem>
+                                    <MenuItem value="Yes">Yes</MenuItem>
+                                    <MenuItem value="No">No</MenuItem>
+                                </TextField>
+                                <TextField
+                                    name="trackingNumber"
+                                    label="Tracking Number"
+                                    fullWidth
+                                    value={editFormData.trackingNumber}
+                                    onChange={handleEditInputChange}
+                                    required
+                                />
+                            </Box>
+
+                            {/* Part Demand and Demand Part Type */}
+                            {editFormData.partsDemandType.map((partType, index) => (
+                                <Box className="flex gap-4" key={index}>
+                                    <TextField
+                                        name={`partDemandType-${index}`}
+                                        label={`Demand Part Type ${index + 1}`}
+                                        fullWidth
+                                        value={partType.partDemandType}
+                                        onChange={(event) => handleEditDemandPartTypeChange(index, 'partDemandType', event.target.value)}
+                                        required
+                                    />
+                                    <TextField
+                                        select
+                                        name={`status-${index}`}
+                                        label="Status"
+                                        fullWidth
+                                        value={partType.status}
+                                        onChange={(event) => handleEditDemandPartTypeChange(index, 'status', event.target.value)}
+                                        required
+                                    >
+                                        <MenuItem value="in-progress">In Progress</MenuItem>
+                                        <MenuItem value="in-transport">In Transport</MenuItem>
+                                        <MenuItem value="completed">Completed</MenuItem>
+                                    </TextField>
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        onClick={() => handleEditRemoveDemandPartType(index)}
+                                        disabled={editFormData.partsDemandType.length === 1} // Disable remove if only 1 field
+                                    >
+                                        Remove
+                                    </Button>
+                                </Box>
+                            ))}
+                            <Button variant="outlined" onClick={handleEditAddDemandPartType}>
+                                + Add Another Part Demand Type
+                            </Button>
+
+                            {/* Status and Document Upload */}
+                            <Box className="flex gap-4">
+                                <TextField
+                                    name="document"
+                                    type="file"
+                                    fullWidth
+                                    onChange={handleEditInputChange}
+                                />
+                            </Box>
+                        </Box>
+
+                        {/* Buttons */}
+                        <Box className="flex justify-end mt-4">
+                            <Button onClick={() => setOpenEditModal(false)} color="error">
+                                Cancel
+                            </Button>
+                            <Button type="submit" variant="contained" className="!bg-[#FC8908]" disabled={editing}>
+                                {editing ? <CircularProgress size={24} /> : 'Update'}
+                            </Button>
+                        </Box>
+                    </form>
+                </Box>
+            </Modal>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={openDeleteDialog}
+                onClose={handleCancelDelete}
+                aria-labelledby="delete-dialog-title"
+                aria-describedby="delete-dialog-description"
+            >
+                <DialogTitle id="delete-dialog-title">Confirm Delete</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="delete-dialog-description">
+                        Are you sure you want to delete this inventory item?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelDelete} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmDelete} color="error" disabled={deleting}>
+                        {deleting ? <CircularProgress size={24} /> : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <Pagination
                 totalEntries={data.length}
@@ -396,6 +702,7 @@ const SiteInventory = () => {
             />
         </Box>
     );
+
 };
 
 export default SiteInventory;
