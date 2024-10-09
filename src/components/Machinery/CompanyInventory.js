@@ -17,6 +17,11 @@ import {
     TableRow,
     TextField,
     Typography,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
 } from "@mui/material";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
@@ -45,6 +50,9 @@ const CompanyInventory = () => {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
+    const [editData, setEditData] = useState(null); // For editing machinery
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // For delete confirmation dialog
+    const [deleting, setDeleting] = useState(false);
     const [formData, setFormData] = useState({
         machineryName: "",
         type: "",
@@ -54,18 +62,17 @@ const CompanyInventory = () => {
         document: null,
     });
 
+    const fetchData = async () => {
+        try {
+            const response = await apiClient.get("/machinery");
+            setData(response.data);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            setLoading(false);
+        }
+    };
     useEffect(() => {
-        // Fetch data from the backend
-        const fetchData = async () => {
-            try {
-                const response = await apiClient.get("/machinery");
-                setData(response.data);
-                setLoading(false);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                setLoading(false);
-            }
-        };
 
         fetchData();
         fetchSites(setProjects);
@@ -76,7 +83,10 @@ const CompanyInventory = () => {
     };
 
     const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+    const handleClose = () => {
+        setOpen(false);
+        setEditData(null); // Reset edit state
+    };
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
@@ -93,6 +103,20 @@ const CompanyInventory = () => {
         });
     };
 
+    const handleEdit = (row) => {
+        console.log(row)
+        setEditData(row); // Populate edit form with selected row data
+        setFormData({
+            machineryName: row.name,
+            type: row.type,
+            trackingNumber: row.trackingNumber,
+            working: row.working ? "yes" : "no",
+            site: row.site || "",
+            document: null,
+        });
+        handleOpen(); // Open the modal for editing
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         const formDataToSend = new FormData();
@@ -106,11 +130,52 @@ const CompanyInventory = () => {
             const response = await apiClient.post("/machinery", formDataToSend);
             console.log("Inventory added:", response.data);
             setOpen(false);
-            // Optionally refetch the data after adding the inventory
             const newData = await apiClient.get("/machinery");
             setData(newData.data);
         } catch (error) {
             console.error("Error adding inventory:", error);
+        }
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        console.log(editData, 'update');
+        setLoading(true);
+        const formDataToSend = new FormData();
+        formDataToSend.append("name", formData.machineryName);
+        formDataToSend.append("type", formData.type);
+        formDataToSend.append("trackingNumber", formData.trackingNumber);
+        formDataToSend.append("workingOn", formData.site);
+        if (formData.document) formDataToSend.append("document", formData.document);
+
+        try {
+            const response = await apiClient.put(`/machinery/${editData._id}`, formDataToSend); // Update the existing machinery
+            if (response.status === 200) {
+                fetchData();
+              }
+            console.log('updated')
+            //const updatedData = await apiClient.get("/machinery");
+            //setData(updatedData.data);
+            setOpen(false);
+        } catch (error) {
+            console.error("Error updating inventory:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        setDeleting(true);
+        console.log(id)
+        try {
+            await apiClient.delete(`/machinery/${id}`);
+            const updatedData = await apiClient.get("/machinery");
+            setData(updatedData.data);
+            setDeleteDialogOpen(false);
+        } catch (error) {
+            console.error("Error deleting inventory:", error);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -174,7 +239,11 @@ const CompanyInventory = () => {
                                                 className="flex items-center justify-around rounded-lg border border-gray-300"
                                                 sx={{ backgroundColor: "#f8f9fa" }}
                                             >
-                                                <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
+                                                <IconButton
+                                                    aria-label="view"
+                                                    sx={{ color: "#6c757d" }}
+                                                    onClick={() => handleEdit(row)}
+                                                >
                                                     <VisibilityIcon />
                                                 </IconButton>
                                                 <Divider
@@ -185,6 +254,7 @@ const CompanyInventory = () => {
                                                 <IconButton
                                                     aria-label="delete"
                                                     sx={{ color: "#dc3545" }}
+                                                    onClick={() => setDeleteDialogOpen(true)}
                                                 >
                                                     <DeleteIcon />
                                                 </IconButton>
@@ -198,7 +268,7 @@ const CompanyInventory = () => {
                 </TableContainer>
             </Paper>
 
-            {/* Modal for adding new Company Inventory */}
+            {/* Modal for adding or editing Company Inventory */}
             <Modal
                 open={open}
                 onClose={handleClose}
@@ -207,20 +277,21 @@ const CompanyInventory = () => {
             >
                 <Box sx={style}>
                     <Typography id="modal-title" variant="h6" component="h2">
-                        Add Company Inventory
+                        {editData ? "Edit Company Inventory" : "Add Company Inventory"}
                     </Typography>
                     <Box
                         component="form"
                         noValidate
                         autoComplete="off"
                         className="flex flex-col gap-4 mt-4"
-                        onSubmit={handleSubmit}
+                        onSubmit={editData ? handleUpdate : handleSubmit}
                     >
                         <TextField
                             required
                             name="machineryName"
                             label="Machinery Name"
                             fullWidth
+                            value={formData.machineryName}
                             onChange={handleInputChange}
                         />
                         <TextField
@@ -228,6 +299,7 @@ const CompanyInventory = () => {
                             name="type"
                             label="Type"
                             fullWidth
+                            value={formData.type}
                             onChange={handleInputChange}
                         />
                         <TextField
@@ -235,6 +307,7 @@ const CompanyInventory = () => {
                             name="trackingNumber"
                             label="Tracking Number"
                             fullWidth
+                            value={formData.trackingNumber}
                             onChange={handleInputChange}
                         />
                         <Select
@@ -283,12 +356,38 @@ const CompanyInventory = () => {
                                 variant="contained"
                                 className="!bg-[#FC8908]"
                             >
-                                Add Inventory
+                                {loading ? <CircularProgress size={24} /> : editData ? "Update" : "Add Inventory"}
                             </Button>
                         </div>
                     </Box>
                 </Box>
             </Modal>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+            >
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this inventory item?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={() => handleDelete(editData?._id)}
+                        color="error"
+                        autoFocus
+                        disabled={deleting}
+                    >
+                        {deleting ? <CircularProgress size={24} /> : "Delete"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <Pagination
                 totalEntries={data.length}

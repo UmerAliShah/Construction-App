@@ -213,7 +213,7 @@ const SiteInventory = () => {
             type: item.type || '',
             working: item.working || '',
             trackingNumber: item.trackingNumber || '',
-            partsDemandType: item.partsDemandType.length > 0 ? item.partsDemandType : [{ partDemandType: "", status: "" }],
+            partsDemandType: item.partsDemandType?.length > 0 ? item.partsDemandType : [{ partDemandType: "", status: "" }],
             status: item.status || '',
             document: null, // Assuming you might want to upload a new document
         });
@@ -259,7 +259,6 @@ const SiteInventory = () => {
         setEditFormData({ ...editFormData, partsDemandType: newDemandPartTypes });
     };
 
-    console.log(editFormData);
     const handleEditSubmit = async (event) => {
         event.preventDefault();
 
@@ -278,7 +277,7 @@ const SiteInventory = () => {
 
         try {
             setEditing(true);
-            const response = await apiClient.put(`/machinery/${itemToEdit.id}`, payload);
+            const response = await apiClient.put(`/machinery/${itemToEdit._id}`, payload);
             console.log('Edit response:', response.data);
             setData(data.map(item => item.id === itemToEdit.id ? response.data : item));
             setEditFormData({
@@ -396,11 +395,11 @@ const SiteInventory = () => {
                                                     borderRadius: '16px',
                                                 }}
                                             >
-                                                {row.partsDemandType.length > 0 ? 'Yes' : 'No'}
+                                                {row?.partsDemandType?.length > 0 ? 'Yes' : 'No'}
                                             </Button>
                                         </TableCell>
                                         <TableCell>
-                                            {row.partsDemandType.map((part, idx) => (
+                                            {row.partsDemandType?.map((part, idx) => (
                                                 <div key={idx}>
                                                     {part.partDemandType} - {part.status}
                                                 </div>
