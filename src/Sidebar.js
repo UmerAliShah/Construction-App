@@ -214,7 +214,7 @@ const Sidebar = ({ toggleSidebar }) => {
                           Employees
                         </NavLink>
                         <NavLink
-                        to={`/${item._id}/pending-finances`}
+                          to={`/${item._id}/pending-finances`}
                           onClick={toggleSidebar}
                           state={{ data: selectedProject }}
                           className={({ isActive }) =>
@@ -338,15 +338,21 @@ const Sidebar = ({ toggleSidebar }) => {
                 >
                   Site Inventory
                 </NavLink>
-                <NavLink
-                  to="/machinery-finances"
-                  onClick={toggleSidebar}
-                  className={({ isActive }) =>
-                    isActive ? "block py-1 !text-orange-500" : "block py-1"
-                  }
-                >
-                  Machinary Finances
-                </NavLink>
+                {(role === "owner" ||
+                  role === "owner_assistant" ||
+                  role === "site_head" ||
+                  role === "machinary_manager" ||
+                  role === "site_assistant") && (
+                  <NavLink
+                    to="/machinery-finances"
+                    onClick={toggleSidebar}
+                    className={({ isActive }) =>
+                      isActive ? "block py-1 !text-orange-500" : "block py-1"
+                    }
+                  >
+                    Machinary Finances
+                  </NavLink>
+                )}
               </div>
             )}
           </div>

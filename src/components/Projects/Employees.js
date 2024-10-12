@@ -143,19 +143,19 @@ const Employees = () => {
               <TableBody>
                 {paginatedEmployees.map((employee, index) => (
                   <TableRow key={index}>
-                    <TableCell>{employee.name}</TableCell>
-                    <TableCell>{employee.employeeId}</TableCell>
-                    <TableCell>{employee.phone}</TableCell>
-                    <TableCell>{employee.role}</TableCell>
+                    <TableCell>{employee?.name || "No Name"}</TableCell>
+                    <TableCell>{employee?.employeeId}</TableCell>
+                    <TableCell>{employee?.phone}</TableCell>
+                    <TableCell>{employee?.role}</TableCell>
                     <TableCell>
                       <span
                         style={{
-                          background: employee.currentMonthPayStatus === "pending" ? "orange" : "#62912C47",
+                          background: employee?.currentMonthPayStatus === "pending" ? "orange" : "#62912C47",
                           borderRadius: "30px",
                           padding: "10px",
                         }}
                       >
-                        {employee.currentMonthPayStatus}
+                        {employee?.currentMonthPayStatus}
                       </span>
                     </TableCell>
                     <TableCell>

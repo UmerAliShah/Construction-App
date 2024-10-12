@@ -32,6 +32,7 @@ const AddNewEmployee = () => {
     "site_head",
     "project_manager",
     "supply_manager",
+    "machinary_manager",
     "vendor",
   ]);
 
