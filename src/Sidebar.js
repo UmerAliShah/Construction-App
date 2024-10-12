@@ -260,7 +260,7 @@ const Sidebar = ({ toggleSidebar }) => {
                         >
                           Inventory
                         </NavLink>
-                        <NavLink
+                        {/*<NavLink
                           to={`/${item._id}/project-progress`}
                           onClick={toggleSidebar}
                           className={({ isActive }) =>
@@ -270,7 +270,7 @@ const Sidebar = ({ toggleSidebar }) => {
                           }
                         >
                           Progress
-                        </NavLink>
+                        </NavLink>*/}
                         <NavLink
                           to={`/${item._id}/supply-tracking`}
                           onClick={toggleSidebar}

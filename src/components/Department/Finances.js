@@ -232,7 +232,7 @@ const Finances = () => {
                         >
                           <VisibilityIcon />
                         </IconButton>
-                        <Divider
+                        {/*<Divider
                           orientation="vertical"
                           flexItem
                           sx={{ borderColor: "#e0e0e0" }}
@@ -243,7 +243,7 @@ const Finances = () => {
                           sx={{ color: "#dc3545" }}
                         >
                           <DeleteIcon />
-                        </IconButton>
+                        </IconButton>*/}
                       </Box>
                     </TableCell>
                   </TableRow>
