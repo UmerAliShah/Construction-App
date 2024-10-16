@@ -18,6 +18,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import DescriptionIcon from "@mui/icons-material/Description";
 import Pagination from "../../Pagination"; // Importing your custom pagination component
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
@@ -28,7 +29,7 @@ const style = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 400,
+  width: 700,
   bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
@@ -46,12 +47,7 @@ const Finances = () => {
   const [editData, setEditData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    department: "",
-    nameOfConcerned: "",
-    amount: "",
-    totalGiven: "",
-  });
+  const [formData, setFormData] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
 
   const handleSelectAll = (event) => {
@@ -139,12 +135,7 @@ const Finances = () => {
     setIsEdit(true);
     setEditData(row);
     const result = await apiClient.get(`/finance/user/${row.userId}`);
-    setFormData({
-      department: row.department || "",
-      nameOfConcerned: row.nameOfConcerned?.name || "",
-      amount: row.amount || "",
-      totalGiven: row.totalGiven || row.amount, // Assuming totalGiven is the same as amount
-    });
+    setFormData(result.data);
     setOpen(true);
   };
 
@@ -216,7 +207,9 @@ const Finances = () => {
               <TableBody>
                 {paginatedData.map((row, index) => (
                   <TableRow key={row.id}>
-                    <TableCell>{row.nameOfConcerned || row.machinery || "no name"}</TableCell>
+                    <TableCell>
+                      {row.nameOfConcerned || row.machinery || "no name"}
+                    </TableCell>
                     <TableCell>{row.role}</TableCell>
                     <TableCell>{row.employeeId}</TableCell>
                     <TableCell>{row.totalAmount}</TableCell>
@@ -266,6 +259,7 @@ const Finances = () => {
       <Modal
         open={open}
         onClose={handleClose}
+        size="lg"
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
       >
@@ -280,53 +274,50 @@ const Finances = () => {
             className="flex flex-col gap-4 mt-4"
             onSubmit={handleSubmit}
           >
-            <TextField
-              required
-              name="department"
-              label="Department Type"
-              value={formData.department}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              required
-              name="nameOfConcerned"
-              label="Name of Person Concerned"
-              value={formData.nameOfConcerned}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              required
-              name="amount"
-              label="Amount Given"
-              value={formData.amount}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              required
-              name="totalGiven"
-              label="Total Given So Far"
-              value={formData.totalGiven}
-              onChange={handleChange}
-              fullWidth
-            />
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleClose} color="error">
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                className="!bg-[#FC8908]"
-                sx={{ ml: 2 }}
-                disabled={submitLoading}
-              >
-                {submitLoading ? <CircularProgress size={20} /> : "Submit"}
-              </Button>
-            </div>
+            <TableContainer component={Paper} style={{ overflowX: "auto" }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell>Documents</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Approved By</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {formData.map((row, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{row.partstype}</TableCell>
+                      <TableCell>{row.amount}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="text"
+                          style={{ color: "#007bff", textTransform: "none" }}
+                          startIcon={<DescriptionIcon />}
+                          href={row.document} // Assuming 'document' is a URL
+                          target="_blank"
+                        >
+                          View Document
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          style={{
+                            background: "#62912C47",
+                            borderRadius: "30px",
+                            padding: "10px",
+                          }}
+                        >
+                          {row.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>{row.approvedBy?.name || ""}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Box>
         </Box>
       </Modal>
