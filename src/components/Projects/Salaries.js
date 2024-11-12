@@ -9,13 +9,17 @@ import {
   Modal,
   Paper,
   Select,
+  CircularProgress,
   TextField,
   Typography,
 } from "@mui/material";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
 import Pagination from "../../Pagination";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
+import apiClient from "../../api/apiClient";
+import { CloseFullscreen } from "@mui/icons-material";
+import useApi from "../../hooks/useApi";
 
 const demoData = Array(10).fill({
   employeeName: "Conrad Webber",
@@ -36,29 +40,14 @@ const style = {
 
 const Salaries = () => {
   const location = useLocation();
-  const selectedProject = location.state?.data;
-  const [selected, setSelected] = useState([]);
+  const { id } = useParams();
+  const [selected, setSelected] = useState({});
   const [data, setData] = useState([]);
+
+  const [currentMonthPayStatus, setCurrentMonthPayStatus] = useState();
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      setSelected(data.map((_, index) => index));
-    } else {
-      setSelected([]);
-    }
-  };
-  useEffect(() => {
-    if (selectedProject) {
-      setData([
-        ...selectedProject.employees,
-        selectedProject.siteHead,
-        selectedProject.assistant,
-      ]);
-    }
-  }, []);
 
   const handleEntriesChange = (event) => {
     setEntriesPerPage(event.target.value);
@@ -71,6 +60,35 @@ const Salaries = () => {
     (currentPage - 1) * entriesPerPage,
     currentPage * entriesPerPage
   );
+  const { request, loading, error } = useApi((data) =>
+    apiClient.post(`/users/${selected._id}`,data)
+);
+  const getUsers = async () => {
+
+    const response = await apiClient.get(`/projects/${id}`);
+    if (response.status === 200) {
+      setData([
+        ...response.data.employees,
+        response.data.siteHead,
+        response.data.assistant,
+      ]);
+    }
+  };
+  useEffect(() => {
+    getUsers();
+  }, []);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const data = {
+      currentMonthPayStatus,
+    }
+    const response = await request(data);
+    if (response.status === 200) {
+      getUsers();
+      handleClose();
+    }
+  };
 
   return (
     <Box className="p-6">
@@ -78,13 +96,13 @@ const Salaries = () => {
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
           Projects &gt; Salaries
         </Typography>
-        <Button
+        {/* <Button
           variant="contained"
           className="mb-4 !bg-[#FC8908]"
           onClick={handleOpen}
         >
           + Add Salary
-        </Button>
+        </Button> */}
       </Box>
       <Paper elevation={0} className="p-4">
         <Grid container>
@@ -110,7 +128,9 @@ const Salaries = () => {
                   <span
                     style={{
                       background:
-                        row.currentMonthPayStatus === "Paid" ? "#62912C47" : "red",
+                        row.currentMonthPayStatus === "paid"
+                          ? "#62912C47"
+                          : "red",
                       borderRadius: "30px",
                       padding: "0 8px",
                     }}
@@ -123,15 +143,13 @@ const Salaries = () => {
                   sx={{ backgroundColor: "#f8f9fa" }}
                 >
                   <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <Divider
-                    orientation="vertical"
-                    flexItem
-                    sx={{ borderColor: "#e0e0e0" }}
-                  />
-                  <IconButton aria-label="delete" sx={{ color: "#dc3545" }}>
-                    <DeleteIcon />
+                    <VisibilityIcon
+                      onClick={() => {
+                        handleOpen();
+                        setSelected(row);
+                        setCurrentMonthPayStatus(row.currentMonthPayStatus);
+                      }}
+                    />
                   </IconButton>
                 </Box>
               </Box>
@@ -149,12 +167,13 @@ const Salaries = () => {
       >
         <Box sx={style}>
           <Typography id="modal-title" variant="h6" component="h2">
-            Add Salary
+            Edit Salary
           </Typography>
           <Box
             component="form"
             noValidate
             autoComplete="off"
+            onSubmit={handleSubmit}
             className="flex flex-col gap-4 mt-4"
           >
             <TextField
@@ -162,18 +181,21 @@ const Salaries = () => {
               id="employee-name"
               label="Employee Name"
               fullWidth
+              disabled
+              value={selected?.name}
             />
             <Select
               required
               fullWidth
               label="Salary Paid"
-              value=""
-              onChange={() => {}}
-              displayEmpty
+              value={currentMonthPayStatus}
+              onChange={(e) => {
+                setCurrentMonthPayStatus(e.target.value);
+              }}
             >
               <MenuItem value="">Select</MenuItem>
-              <MenuItem value="Yes">Yes</MenuItem>
-              <MenuItem value="No">No</MenuItem>
+              <MenuItem value="paid">Paid</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
             </Select>
             <div className="flex justify-end mt-4">
               <Button onClick={handleClose} color="error">
@@ -183,8 +205,13 @@ const Salaries = () => {
                 type="submit"
                 variant="contained"
                 className="!bg-[#FC8908]"
-              >
-                Add Salary
+                >
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Edit Salary"
+                )}
+                
               </Button>
             </div>
           </Box>
@@ -197,7 +224,7 @@ const Salaries = () => {
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         onEntriesPerPageChange={setEntriesPerPage}
-        />
+      />
     </Box>
   );
 };

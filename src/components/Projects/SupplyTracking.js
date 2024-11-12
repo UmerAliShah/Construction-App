@@ -140,7 +140,7 @@ const SupplyTracking = () => {
             ) : (
                 paginatedData.map((row, index) => (
                 <TableRow key={row.id}>
-                  <TableCell>{row.orderReferenceNumber}</TableCell>
+                  <TableCell>{row.refNumber}</TableCell>
                   <TableCell>
                     <span
                       style={{

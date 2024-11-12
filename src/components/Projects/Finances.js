@@ -56,6 +56,8 @@ const Finances = () => {
   const [finance, setFinance] = useState(initialData);
   const [selected, setSelected] = useState(null); // Store the selected finance record for updating
   const [employees, setEmployees] = useState([]);
+  console.log(employees,'test')
+
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -280,9 +282,9 @@ const Finances = () => {
               }
             >
               <MenuItem value="">Name of Concerned</MenuItem>
-              {employees.map((user) => (
-                <MenuItem key={user._id} value={user._id}>
-                  {user.name}
+              {employees?.map((user) => (
+                <MenuItem key={user?._id} value={user?._id}>
+                  {user?.name}
                 </MenuItem>
               ))}
             </Select>

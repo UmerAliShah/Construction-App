@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   IconButton,
@@ -6,8 +6,11 @@ import {
   Paper,
   Select,
   MenuItem,
-  Divider, Avatar,
-  Button, TextField, Modal,
+  Divider,
+  Avatar,
+  Button,
+  TextField,
+  Modal,
   CircularProgress,
   TableContainer,
   Table,
@@ -15,34 +18,39 @@ import {
   TableRow,
   TableCell,
   TableBody,
-} from '@mui/material';
-import { ReactComponent as VisibilityIcon } from '../Icons/quickView.svg';
-import { ReactComponent as DeleteIcon } from '../Icons/bin.svg';
-import { styled } from '@mui/system';
-import Pagination from '../../Pagination';
-import apiClient from '../../api/apiClient';
-import { useLocation } from 'react-router-dom';
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from "@mui/material";
+import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
+import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
+import { styled } from "@mui/system";
+import Pagination from "../../Pagination";
+import apiClient from "../../api/apiClient";
+import { useLocation } from "react-router-dom";
 
 const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
   width: 400,
-  bgcolor: 'background.paper',
+  bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
-  borderRadius: '8px',
+  borderRadius: "8px",
 };
 
 const ImageUploadBox = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
   padding: theme.spacing(2),
   border: `1px dashed grey`,
-  borderRadius: '8px',
-  cursor: 'pointer',
+  borderRadius: "8px",
+  cursor: "pointer",
   marginBottom: theme.spacing(2),
 }));
 
@@ -50,41 +58,46 @@ const Vendors = () => {
   const location = useLocation();
   const selectedProject = location.state?.data;
   const [vendors, setVendors] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [open, setOpen] = useState(false);
   const [image, setImage] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [newVendor, setNewVendor] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    contactNumber: '',
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
   });
 
   useEffect(() => {
-    if (selectedProject) {
-      // Filter employees with role "vendor"
-      const vendors = selectedProject.employees.filter(employee => employee.role === 'vendor');
-      setVendors(vendors);
-    }
-    // fetchVendors();
+    //   if (selectedProject) {
+    //     // Filter employees with role "vendor"
+    //     const vendors = selectedProject.employees.filter(
+    //       (employee) => employee.role === "vendor"
+    //     );
+    //     setVendors(vendors);
+    //   }
+    fetchVendors();
   }, [selectedProject]);
-  
 
-  // const fetchVendors = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const response = await apiClient.get('/users/vendors');
-  //     setVendors(response.data);
-  //   } catch (error) {
-  //     console.error('Error fetching vendors', error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const fetchVendors = async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get(
+        `/users/vendors/${selectedProject._id}`
+      );
+      setVendors(response.data);
+    } catch (error) {
+      console.error("Error fetching vendors", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -98,6 +111,7 @@ const Vendors = () => {
       };
       reader.readAsDataURL(file);
     }
+    setProfileImage(file);
   };
 
   const handleEntriesChange = (event) => {
@@ -112,14 +126,49 @@ const Vendors = () => {
     }));
   };
 
+
+  const handleOpenDialog = (userId) => {
+    setUserToDelete(userId);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleDelete = async () => {
+    const result = await apiClient.delete(
+      `/users/vendor/${userToDelete}/${selectedProject._id}`
+    );
+    if (result.status === 200) {
+      setOpenDialog(false);
+      fetchVendors();
+    }
+  };
+
   const handleCreateVendor = async (event) => {
     event.preventDefault();
+    const formData = new FormData();
+    formData.append("email", newVendor.email);
+    formData.append("name", newVendor.name);
+    formData.append("phone", newVendor.phone);
+    formData.append("address", newVendor.address);
+    formData.append("profileImage", profileImage);
+    formData.append("siteId", selectedProject._id);
+
     try {
-      await apiClient.post('/vendors', newVendor);
-      // fetchVendors();
-      handleClose();
+      const result = await apiClient.post("/users/vendor/", formData);
+
+      if (result.status === 200) {
+        fetchVendors();
+        handleClose();
+      }
     } catch (error) {
-      console.error('Error creating vendor', error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        "An error occurred";
+      alert(errorMessage);
     }
   };
 
@@ -138,7 +187,12 @@ const Vendors = () => {
           variant="contained"
           color="warning"
           className="mb-4 !bg-[#FC8908]"
-          style={{ float: 'right', textTransform: 'capitalize', fontWeight: '400', borderRadius: '8px' }}
+          style={{
+            float: "right",
+            textTransform: "capitalize",
+            fontWeight: "400",
+            borderRadius: "8px",
+          }}
           onClick={handleOpen}
         >
           + Add New Vendor
@@ -147,7 +201,12 @@ const Vendors = () => {
 
       <Paper elevation={0} className="p-4">
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100px">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100px"
+          >
             <CircularProgress />
           </Box>
         ) : (
@@ -158,7 +217,7 @@ const Vendors = () => {
                   <TableCell>Vendor Name</TableCell>
                   <TableCell>Email</TableCell>
                   <TableCell>Phone Number</TableCell>
-                  <TableCell>Status</TableCell>
+                  <TableCell>Profile</TableCell>
                   <TableCell>Action</TableCell>
                 </TableRow>
               </TableHead>
@@ -168,14 +227,22 @@ const Vendors = () => {
                     <TableCell>{vendor.name}</TableCell>
                     <TableCell>{vendor.email}</TableCell>
                     <TableCell>{vendor.phone}</TableCell>
-                    <TableCell>{vendor.status}</TableCell>
                     <TableCell>
-                      <IconButton aria-label="view" sx={{ color: '#6c757d' }}>
+                      <img src={vendor.profileImage} width="50" height="50" />
+                    </TableCell>
+                    <TableCell>
+                      <IconButton aria-label="view" sx={{ color: "#6c757d" }}>
                         <VisibilityIcon />
                       </IconButton>
-                      <Divider orientation="vertical" flexItem sx={{ borderColor: '#e0e0e0' }} />
-                      <IconButton aria-label="delete" sx={{ color: '#dc3545' }}>
-                        <DeleteIcon />
+                      <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={{ borderColor: "#e0e0e0" }}
+                      />
+                      <IconButton aria-label="delete" sx={{ color: "#dc3545" }}>
+                        <DeleteIcon
+                          onClick={() => handleOpenDialog(vendor._id)}
+                        />
                       </IconButton>
                     </TableCell>
                   </TableRow>
@@ -210,15 +277,18 @@ const Vendors = () => {
                 sx={{ width: 56, height: 56, marginBottom: 2 }}
               />
               <Typography variant="body2" color="textSecondary">
-                Drag Image here or{' '}
-                <label htmlFor="upload-image" style={{ color: '#FC8908', cursor: 'pointer' }}>
+                Drag Image here or{" "}
+                <label
+                  htmlFor="upload-image"
+                  style={{ color: "#FC8908", cursor: "pointer" }}
+                >
                   Browse image
                 </label>
               </Typography>
               <input
                 type="file"
                 id="upload-image"
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 onChange={handleImageChange}
               />
             </ImageUploadBox>
@@ -257,16 +327,12 @@ const Vendors = () => {
               onChange={handleNewVendorChange}
               fullWidth
             />
-            <TextField
-              id="contact-number"
-              label="Contact Number"
-              name="contactNumber"
-              value={newVendor.contactNumber}
-              onChange={handleNewVendorChange}
-              fullWidth
-            />
             <div className="flex self-end mt-4">
-              <Button onClick={handleClose} color="error" className='border !mr-4'>
+              <Button
+                onClick={handleClose}
+                color="error"
+                className="border !mr-4"
+              >
                 Discard
               </Button>
               <Button type="submit" variant="contained" color="warning">
@@ -283,7 +349,24 @@ const Vendors = () => {
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         onEntriesPerPageChange={handleEntriesChange}
-        />
+      />
+
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this user?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="secondary">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
