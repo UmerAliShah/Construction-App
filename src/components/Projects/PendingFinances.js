@@ -49,7 +49,7 @@ const PendingFinances = () => {
     } catch (error) {
       console.error("Error fetching pending finance requests:", error);
     } finally {
-      setLoading(false); // Hide loader after fetching
+      setLoading(false);
     }
   };
 
@@ -69,7 +69,11 @@ const PendingFinances = () => {
         setOpenDialog(false);
       }
     } catch (error) {
-      console.error("Error updating request status:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        "An error occurred";
+      alert(errorMessage);
     }
   };
 
