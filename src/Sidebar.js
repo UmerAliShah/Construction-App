@@ -164,6 +164,15 @@ const Sidebar = ({ toggleSidebar }) => {
                 >
                   Employees
                 </NavLink>
+                <NavLink
+                  to="/projects"
+                  onClick={toggleSidebar}
+                  className={({ isActive }) =>
+                    isActive ? "block py-1 !text-orange-500" : "block py-1"
+                  }
+                >
+                  Projects
+                </NavLink>
               </div>
             )}
           </div>

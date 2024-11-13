@@ -15,6 +15,7 @@ import FinancialRequests from './components/Department/FinancialRequest';
 import IPCTracking from './components/Ofifce/IPCTracking';
 import OfficeFinance from './components/Ofifce/OfficeFinance';
 import OfficeProgress from './components/Ofifce/OfficeProgress';
+import Projects from './components/Ofifce/Projects';
 
 import Employees from './components/Projects/Employees';
 import PendingFinance from './components/Projects/PendingFinances';
@@ -72,6 +73,7 @@ const AppContent = () => {
               <Route path="/ipc-tracking" element={<IPCTracking />} />
               <Route path="/office-finances" element={<OfficeFinance />} />
               <Route path="/office-progress" element={<OfficeProgress />} />
+              <Route path="/projects" element={<Projects />} />
 
               <Route path="/employees" element={<Employees />} />
               <Route path="/:id/employees" element={<Employees />} />
