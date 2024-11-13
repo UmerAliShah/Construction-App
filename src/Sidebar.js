@@ -182,6 +182,7 @@ const Sidebar = ({ toggleSidebar }) => {
         {(role === "owner" ||
           role === "owner_assistant" ||
           role === "site_head" ||
+          role === "project_manager" ||
           role === "site_assistant") && (
           <div>
             <div
@@ -316,6 +317,7 @@ const Sidebar = ({ toggleSidebar }) => {
         {(role === "owner" ||
           role === "owner_assistant" ||
           role === "site_head" ||
+          role === "project_manager" ||
           role === "site_assistant") && (
           <div>
             <div
@@ -351,6 +353,7 @@ const Sidebar = ({ toggleSidebar }) => {
                   role === "owner_assistant" ||
                   role === "site_head" ||
                   role === "machinary_manager" ||
+                  role === "project_manager" ||
                   role === "site_assistant") && (
                   <NavLink
                     to="/machinery-finances"

@@ -16,6 +16,11 @@ import {
   TableRow,
   TextField,
   Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
@@ -42,6 +47,8 @@ const SiteManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [toastData, setToastData] = useState({ bg: null, message: null });
   const [open, setOpen] = useState(false);
   const [selectedSite, setSelectedSite] = useState(null);
@@ -75,15 +82,24 @@ const SiteManagement = () => {
   };
 
   const handleClose = () => setOpen(false);
+  
+  const handleOpenDialog = (userId) => {
+    setUserToDelete(userId);
+    setOpenDialog(true);
+  };
 
-  const handleDelete = async (id) => {
-    setLoading(true);
-    const response = await apiClient.delete(`/site/${id}`);
-    if (response.status === 200) {
-      showToastMessage("Site Deleted Successfully", "bg-success");
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await apiClient.delete(`/projects/${userToDelete}`);
       fetchSites();
+      setOpenDialog(false);
+    } catch (error) {
+      console.error("Error deleting employee:", error);
     }
-    setLoading(false);
   };
 
   const handleSubmit = async (e) => {
@@ -124,7 +140,7 @@ const SiteManagement = () => {
   const fetchSites = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get("/");
+      const response = await apiClient.get("/projects/");
       console.log(response)
       if (response.status === 200 && Array.isArray(response.data)) {
         setData(response.data);
@@ -151,15 +167,12 @@ const SiteManagement = () => {
             apiClient.get("/users/available/site-assistant"),
           ]);
       
-          // Ensure each set function only sets an array, or defaults to an empty array if data is not an array
           setEmployees(Array.isArray(employeesRes.data) ? employeesRes.data : []);
           setSiteHeads(Array.isArray(siteHeadsRes.data) ? siteHeadsRes.data : []);
           setSiteAssistants(Array.isArray(siteAssistantsRes.data) ? siteAssistantsRes.data : []);
 
-          console.log(siteHeads, '123');
         } catch (error) {
           console.error("Error fetching dropdown data:", error);
-          // Set to empty arrays on error to avoid issues
           setEmployees([]);
           setSiteHeads([]);
           setSiteAssistants([]);
@@ -169,7 +182,7 @@ const SiteManagement = () => {
   useEffect(() => {
     fetchSites();
     fetchDropdownData();
-  }, []);
+  }, [siteData]);
 
 //  const paginatedData = data.slice(
 //    (currentPage - 1) * entriesPerPage,
@@ -218,7 +231,7 @@ const SiteManagement = () => {
                         <VisibilityIcon />
                       </IconButton>
                       <Divider orientation="vertical" flexItem sx={{ borderColor: "#e0e0e0" }} />
-                      <IconButton aria-label="delete" sx={{ color: "#dc3545" }} onClick={() => handleDelete(row._id)}>
+                      <IconButton aria-label="delete" sx={{ color: "#dc3545" }} onClick={() => handleOpenDialog(row._id)}>
                         <DeleteIcon />
                       </IconButton>
                     </Box>
@@ -315,6 +328,24 @@ const SiteManagement = () => {
           onEntriesPerPageChange={handleEntriesChange}
         />
       </div>
+
+       {/* Confirmation Dialog */}
+       <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this user?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="secondary">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

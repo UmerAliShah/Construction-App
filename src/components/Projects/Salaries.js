@@ -61,7 +61,7 @@ const Salaries = () => {
     currentPage * entriesPerPage
   );
   const { request, loading, error } = useApi((data) =>
-    apiClient.post(`/users/${selected._id}`,data)
+    apiClient.put(`/users/${selected._id}`,data)
 );
   const getUsers = async () => {
 
