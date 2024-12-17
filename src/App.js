@@ -10,6 +10,7 @@ import Sidebar from './Sidebar';
 import Dashboard from './components/dashboard/Dashboard';
 
 import Finances from './components/Department/Finances';
+import MechineryParts from './components/Department/MechineryParts';
 import FinancialRequests from './components/Department/FinancialRequest';
 
 import IPCTracking from './components/Ofifce/IPCTracking';
@@ -69,6 +70,7 @@ const AppContent = () => {
             <Route element={<ProtectedRoutes />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/finances" element={<Finances />} />
+              <Route path="/machinery-parts" element={<MechineryParts />} />
               <Route path="/financial-requests" element={<FinancialRequests />} />
               <Route path="/ipc-tracking" element={<IPCTracking />} />
               <Route path="/office-finances" element={<OfficeFinance />} />

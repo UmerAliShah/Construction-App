@@ -115,6 +115,15 @@ const Sidebar = ({ toggleSidebar }) => {
                 >
                   Financial Requests
                 </NavLink>
+                <NavLink
+                  to="/machinery-parts"
+                  onClick={toggleSidebar}
+                  className={({ isActive }) =>
+                    isActive ? "block py-1 !text-orange-500" : "block py-1"
+                  }
+                >
+                  Machinery parts
+                </NavLink>
               </div>
             )}
           </div>
@@ -338,17 +347,19 @@ const Sidebar = ({ toggleSidebar }) => {
                     isActive ? "block py-1 !text-orange-500" : "block py-1"
                   }
                 >
-                  Company Inventory
+                  Company machinery
                 </NavLink>
-                <NavLink
-                  to="/site-inventory"
-                  onClick={toggleSidebar}
-                  className={({ isActive }) =>
-                    isActive ? "block py-1 !text-orange-500" : "block py-1"
-                  }
-                >
-                  Site Inventory
-                </NavLink>
+                {(role === "site_head" || role === "machinary_manager") && (
+                  <NavLink
+                    to="/site-inventory"
+                    onClick={toggleSidebar}
+                    className={({ isActive }) =>
+                      isActive ? "block py-1 !text-orange-500" : "block py-1"
+                    }
+                  >
+                    Site machinery
+                  </NavLink>
+                )}
                 {(role === "owner" ||
                   role === "owner_assistant" ||
                   role === "site_head" ||

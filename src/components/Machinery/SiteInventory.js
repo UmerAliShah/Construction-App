@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Divider,
   IconButton,
   MenuItem,
   Modal,
@@ -21,19 +22,22 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  InputLabel,
 } from "@mui/material";
-import DescriptionIcon from "@mui/icons-material/Description";
-import Pagination from "../../Pagination";
 import { ReactComponent as VisibilityIcon } from "../Icons/quickView.svg";
 import { ReactComponent as DeleteIcon } from "../Icons/bin.svg";
+import DescriptionIcon from "@mui/icons-material/Description";
+import Pagination from "../../Pagination";
 import apiClient from "../../api/apiClient";
+import { fetchSites } from "../../Sidebar";
+import { useSelector } from "react-redux";
 
 const style = {
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 600,
+  width: 400,
   bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
@@ -41,369 +45,251 @@ const style = {
 };
 
 const SiteInventory = () => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { role: currentRole } = useSelector((state) => state.auth);
+  const [selected, setSelected] = useState([]);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [projects, setProjects] = useState([]);
   const [open, setOpen] = useState(false);
+  const [partOpen, setPartOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState([]);
+  const [availableMachinary, setAvailableMachinary] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "",
-    working: "",
-    trackingNumber: "",
-    partsDemandType: [{ partDemandType: "", status: "" }],
-    status: "",
-    document: null,
-  });
-  const [filter, setFilter] = useState(""); // Filter state
-
-  // State for Delete Confirmation Dialog
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
+  const [editData, setEditData] = useState(null); // For editing machinery
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // For delete confirmation dialog
   const [deleting, setDeleting] = useState(false);
-
-  // State for Edit Modal
-  const [sites, setSites] = useState([]);
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [itemToEdit, setItemToEdit] = useState(null);
-  const [editFormData, setEditFormData] = useState({
-    name: "",
-    type: "",
-    working: "",
-    workingOn: "",
-    trackingNumber: "",
-    partsDemandType: [{ partDemandType: "", status: "" }],
-    status: "",
-    document: null,
-  });
   const [editing, setEditing] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState(null);
+  const initialData = {
+    machineryName: "",
+    type: "",
+    trackingNumber: "",
+    working: "",
+    site: "",
+    document: null,
+  };
+  const [formData, setFormData] = useState(initialData);
 
-  // Fetching data from the backend
   const fetchData = async () => {
     try {
       const response = await apiClient.get("/machinery/bySite");
       setData(response.data);
       setLoading(false);
     } catch (error) {
+      console.error("Error fetching data:", error);
+      setLoading(false);
+    }
+  };
+  const fetchAvailable = async () => {
+    try {
+      const response = await apiClient.get("/machinery");
+      setAvailableMachinary(response.data);
+      setLoading(false);
+    } catch (error) {
       console.error("Error fetching machinery:", error);
       setLoading(false);
     }
   };
-  const fetchSites = async () => {
-    setLoading(true);
+  useEffect(() => {
+    fetchData();
+    fetchSites(setProjects);
+    fetchAvailable();
+  }, []);
+
+  const handleEntriesChange = (event) => {
+    setEntriesPerPage(event.target.value);
+  };
+
+  const handleOpen = () => setOpen(true);
+  const handlePartOpen = () => setPartOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+    setEditData(null); // Reset edit state
+  };
+  const handlePartClose = () => {
+    setPartOpen(false);
+    setFormData(initialData); // Reset edit state
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleFileChange = (event) => {
+    setFormData({
+      ...formData,
+      document: event.target.files[0],
+    });
+  };
+
+  const handleEdit = (row) => {
+    console.log(row, "test");
+    setEditData(row);
+    setFormData({
+      name: row.name,
+      site: row.site || "",
+    });
+    handleOpen(); // Open the modal for editing
+  };
+
+  // const handleSubmit = async (event) => {
+  //   event.preventDefault();
+  //   const formDataToSend = new FormData();
+  //   formDataToSend.append("name", formData.machineryName);
+  //   formDataToSend.append("type", formData.type);
+  //   formDataToSend.append("trackingNumber", formData.trackingNumber);
+  //   formDataToSend.append("workingOn", formData.site);
+  //   formDataToSend.append("document", formData.document);
+
+  //   try {
+  //     const response = await apiClient.post("/machinery", formDataToSend);
+  //     console.log("Inventory added:", response.data);
+  //     setOpen(false);
+  //     const newData = await apiClient.get("/machinery");
+  //     setData(newData.data);
+  //   } catch (error) {
+  //     console.error("Error adding inventory:", error);
+  //   }
+  // };
+
+  const handlePartSubmit = async (event) => {
+    event.preventDefault();
+
+    const payload = new FormData();
+    payload.append("name", formData.name);
+
+    const partToAdd = {
+      partDemandType: formData.partDemandType,
+      status: formData.status || "in-progress",
+    };
+
+    payload.append("partsDemandType", JSON.stringify([partToAdd]));
+
     try {
-      const response = await apiClient.get("/projects/");
-      console.log(response);
-      if (response.status === 200 && Array.isArray(response.data)) {
-        setSites(response.data);
-      } else {
-        setSites([]); // Ensure `data` is an array even if the response isn't an array
-      }
+      setEditing(true);
+      const response = await apiClient.put(`/machinery/${itemToEdit}`, payload);
+      console.log("Edit response:", response.data);
+      setFormData({
+        name: "",
+        partsDemandType: [{ partDemandType: "", status: "" }],
+      });
+      setPartOpen(false);
     } catch (error) {
-      console.error("Error fetching sites:", error);
-      setSites([]); // Set as empty array on error
+      console.error("Error editing the item:", error);
+    } finally {
+      fetchData();
+      setItemToEdit(null);
+      setEditing(false);
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const formDataToSend = new FormData();
+    formDataToSend.append("name", formData.name);
+
+    // Handle the 'workingOn' field
+    if (formData.site === "Yes" || formData.site === "yes") {
+      formDataToSend.append("workingOn", "yes"); // To trigger removal in backend
+    } else {
+      formDataToSend.append("workingOn", formData.site); // Use the actual site value
+    }
+
+    // Optionally append partsDemandType if required
+    if (formData.partsDemandType) {
+      formDataToSend.append(
+        "partsDemandType",
+        JSON.stringify(formData.partsDemandType)
+      );
+    }
+
+    try {
+      const response = await apiClient.put(
+        `/machinery/${itemToEdit}`,
+        formDataToSend
+      ); // Update the existing machinery
+
+      if (response.status === 200) {
+        fetchData(); // Refresh data after successful update
+      }
+
+      console.log("updated");
+      setOpen(false); // Close the modal or form after success
+    } catch (error) {
+      console.error("Error updating inventory:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-    fetchSites();
-  }, []);
-
-  const handleInputChange = (event) => {
-    const { name, value, files } = event.target;
-    if (name === "document") {
-      setFormData({
-        ...formData,
-        [name]: files[0],
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
-  };
-
-  const handleDemandPartTypeChange = (index, key, value) => {
-    const newDemandPartTypes = [...formData.partsDemandType];
-    if (!newDemandPartTypes[index]) {
-      newDemandPartTypes[index] = { partDemandType: "", status: "" };
-    }
-    newDemandPartTypes[index] = {
-      ...newDemandPartTypes[index],
-      [key]: value,
-    };
-    setFormData({ ...formData, partsDemandType: newDemandPartTypes });
-  };
-
-  const handleAddDemandPartType = () => {
-    setFormData({
-      ...formData,
-      partsDemandType: [
-        ...formData.partsDemandType,
-        { partDemandType: "", status: "" },
-      ],
-    });
-  };
-
-  const handleRemoveDemandPartType = (index) => {
-    const newDemandPartTypes = formData.partsDemandType.filter(
-      (_, i) => i !== index
-    );
-    setFormData({ ...formData, partsDemandType: newDemandPartTypes });
-  };
-
-  const handleFilterChange = (event) => {
-    setFilter(event.target.value);
-  };
-
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    const payload = new FormData();
-    payload.append("name", formData.name);
-    payload.append("type", formData.type);
-    payload.append("trackingNumber", formData.trackingNumber);
-    payload.append("document", formData.document);
-
-    formData.partsDemandType.forEach((part, index) => {
-      payload.append(
-        `partsDemandType[${index}][partDemandType]`,
-        part.partDemandType
-      );
-      payload.append(`partsDemandType[${index}][status]`, part.status);
-    });
-
+  const handleDelete = async (id) => {
+    setDeleting(true);
     try {
-      setLoading(true); // Show CircularProgress
-      const response = await apiClient.post("/machinery", payload);
-      console.log("Response from server:", response.data);
-      setData([...data, response.data]); // Update state with new item
-      setFormData({
-        name: "",
-        type: "",
-        working: "",
-        trackingNumber: "",
-        partsDemandType: [{ partDemandType: "", status: "" }],
-        status: "",
-        document: null,
-      });
-      handleClose();
+      await apiClient.delete(`/machinery/${id}`);
+      const updatedData = await apiClient.get("/machinery");
+      setData(updatedData.data);
+      setDeleteDialogOpen(false);
     } catch (error) {
-      console.error("Error submitting the form:", error);
-    } finally {
-      setLoading(false); // Hide CircularProgress
-    }
-  };
-
-  const paginatedData = data
-    .filter((row) => filter === "" || row.workingOn?.name === filter)
-    .slice((currentPage - 1) * entriesPerPage, currentPage * entriesPerPage);
-
-  // Delete Handlers
-  const handleDeleteClick = (item) => {
-    setItemToDelete(item);
-    setOpenDeleteDialog(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!itemToDelete) return;
-
-    try {
-      setDeleting(true);
-      await apiClient.delete(`/machinery/${itemToDelete._id}`);
-      setData(data.filter((item) => item.id !== itemToDelete.id));
-      setOpenDeleteDialog(false);
-      setItemToDelete(null);
-    } catch (error) {
-      console.error("Error deleting the item:", error);
+      console.error("Error deleting inventory:", error);
     } finally {
       setDeleting(false);
     }
   };
 
-  const handleCancelDelete = () => {
-    setOpenDeleteDialog(false);
-    setItemToDelete(null);
-  };
+  const paginatedData = data.slice(
+    (currentPage - 1) * entriesPerPage,
+    currentPage * entriesPerPage
+  );
 
-  // Edit Handlers
-  const handleEditClick = (item) => {
-    setItemToEdit(item);
-    setEditFormData({
-      name: item.name || "",
-      type: item.type || "",
-      working: item.working || "",
-      trackingNumber: item.trackingNumber || "",
-      partsDemandType:
-        item.partsDemandType?.length > 0
-          ? item.partsDemandType
-          : [{ partDemandType: "", status: "" }],
-      status: item.status || "",
-      document: null, // Assuming you might want to upload a new document
-    });
-    setOpenEditModal(true);
-  };
-
-  const handleEditInputChange = (event) => {
-    const { name, value, files } = event.target;
-    if (name === "document") {
-      setEditFormData({
-        ...editFormData,
-        [name]: files[0],
-      });
-    } else {
-      setEditFormData({
-        ...editFormData,
-        [name]: value,
-      });
-    }
-  };
-
-  const handleEditDemandPartTypeChange = (index, key, value) => {
-    const newDemandPartTypes = [...editFormData.partsDemandType];
-    if (!newDemandPartTypes[index]) {
-      newDemandPartTypes[index] = { partDemandType: "", status: "" };
-    }
-    newDemandPartTypes[index] = {
-      ...newDemandPartTypes[index],
-      [key]: value,
-    };
-    setEditFormData({ ...editFormData, partsDemandType: newDemandPartTypes });
-  };
-
-  const handleEditAddDemandPartType = () => {
-    setEditFormData({
-      ...editFormData,
-      partsDemandType: [
-        ...editFormData.partsDemandType,
-        { partDemandType: "", status: "" },
-      ],
-    });
-  };
-
-  const handleEditRemoveDemandPartType = (index) => {
-    const newDemandPartTypes = editFormData.partsDemandType.filter(
-      (_, i) => i !== index
-    );
-    setEditFormData({ ...editFormData, partsDemandType: newDemandPartTypes });
-  };
-
-  const handleEditSubmit = async (event) => {
-    event.preventDefault();
-
-    const payload = new FormData();
-    payload.append("name", editFormData.name);
-    payload.append("type", editFormData.type);
-    payload.append("trackingNumber", editFormData.trackingNumber);
-    if (editFormData.workingOn) {
-      payload.append("workingOn", editFormData.workingOn);
-    }
-    if (editFormData.document) {
-      payload.append("document", editFormData.document);
-    }
-
-    editFormData.partsDemandType.forEach((part, index) => {
-      payload.append(
-        `partsDemandType[${index}][partDemandType]`,
-        part.partDemandType
-      );
-      payload.append(`partsDemandType[${index}][status]`, part.status);
-    });
-
-    try {
-      setEditing(true);
-      const response = await apiClient.put(
-        `/machinery/${itemToEdit._id}`,
-        payload
-      );
-      console.log("Edit response:", response.data);
-      setData(
-        data.map((item) => (item.id === itemToEdit.id ? response.data : item))
-      );
-      setEditFormData({
-        name: "",
-        type: "",
-        working: "",
-        trackingNumber: "",
-        partsDemandType: [{ partDemandType: "", status: "" }],
-        status: "",
-        document: null,
-      });
-      setOpenEditModal(false);
-      setItemToEdit(null);
-    } catch (error) {
-      console.error("Error editing the item:", error);
-    } finally {
-      setEditing(false);
-    }
-  };
-
+  const allowed = ["site_head", "owner", "owner_assistant"];
   return (
     <Box className="p-6">
       <Box className="flex justify-between items-center mb-4">
         <Typography variant="h5" className="mb-4 font-semibold text-gray-800">
-          Machinery &gt; Site Inventory
+          Machinery &gt; Site Machinery
         </Typography>
-        <Button
-          variant="contained"
-          onClick={handleOpen}
-          sx={{
-            textTransform: "none",
-            backgroundColor: "#FC8908",
-            fontWeight: "400",
-            borderRadius: "8px",
-          }}
-        >
-          + Create a New Inventory
-        </Button>
+        <Box className="flex justify-between items-center mb-4">
+          {allowed.includes(currentRole) && (
+            <Button
+              variant="contained"
+              className="mb-4 me-2 !bg-[#FC8908]"
+              onClick={handleOpen}
+            >
+              + Add Machinery On Site
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            className="mb-4 !bg-[#FC8908]"
+            onClick={handlePartOpen}
+          >
+            + Add New Part Demand
+          </Button>
+        </Box>
       </Box>
-
-      {/* Filter Dropdown */}
-      <Box className="mb-4">
-        <Typography variant="h6">Filter by Working On</Typography>
-        <Select
-          value={filter}
-          onChange={handleFilterChange}
-          displayEmpty
-          fullWidth
-          sx={{ mb: 2 }}
-        >
-          <MenuItem value="">All</MenuItem>
-          {data.map((row, index) => (
-            <MenuItem key={index} value={row.workingOn?.name || ""}>
-              {row.workingOn?.name || "Free To Use"}
-            </MenuItem>
-          ))}
-        </Select>
-      </Box>
-
-      <Paper elevation={0}>
-        <TableContainer component={Paper} sx={{ overflowY: "auto" }}>
-          <Table stickyHeader aria-label="site inventory table">
+      <Paper elevation={0} className="">
+        <TableContainer component={Paper}>
+          <Table stickyHeader aria-label="company inventory table">
             <TableHead>
               <TableRow>
                 <TableCell>Machinery Name</TableCell>
                 <TableCell>Type</TableCell>
-                <TableCell>Documents</TableCell>
-                <TableCell>Working</TableCell>
-                <TableCell>Tracking Number</TableCell>
-                <TableCell>Part Demand</TableCell>
-                <TableCell>Demand Part Type</TableCell>
-                <TableCell>Status</TableCell>
+                <TableCell>Picture/Documents</TableCell>
+                <TableCell>Reference Number</TableCell>
+                <TableCell>Parts Demand</TableCell>
                 <TableCell>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center">
+                  <TableCell colSpan={7} align="center">
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
@@ -423,33 +309,7 @@ const SiteInventory = () => {
                         View Document
                       </Button>
                     </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        style={{
-                          backgroundColor: "#ffcc80",
-                          color: "#f57c00",
-                          borderRadius: "16px",
-                        }}
-                      >
-                        {row.workingOn?.name || "Free To Use"}
-                      </Button>
-                    </TableCell>
                     <TableCell>{row.trackingNumber}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        style={{
-                          backgroundColor: "#ffcc80",
-                          color: "#f57c00",
-                          borderRadius: "16px",
-                        }}
-                      >
-                        {row?.partsDemandType?.length > 0 ? "Yes" : "No"}
-                      </Button>
-                    </TableCell>
                     <TableCell>
                       {row.partsDemandType?.map((part, idx) => (
                         <div key={idx}>
@@ -458,32 +318,29 @@ const SiteInventory = () => {
                       ))}
                     </TableCell>
                     <TableCell>
-                      <span
-                        style={{
-                          background: "orange",
-                          borderRadius: "30px",
-                          padding: "0 8px",
-                        }}
-                      >
-                        {row.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
                       <Box
-                        className="flex items-center justify-between rounded-lg border border-gray-300"
+                        className="flex items-center justify-around rounded-lg border border-gray-300"
                         sx={{ backgroundColor: "#f8f9fa" }}
                       >
                         <IconButton
                           aria-label="view"
                           sx={{ color: "#6c757d" }}
-                          onClick={() => handleEditClick(row)}
+                          onClick={() => {
+                            handleEdit(row);
+                            setItemToEdit(row._id);
+                          }}
                         >
                           <VisibilityIcon />
                         </IconButton>
+                        <Divider
+                          orientation="vertical"
+                          flexItem
+                          sx={{ borderColor: "#e0e0e0" }}
+                        />
                         <IconButton
                           aria-label="delete"
                           sx={{ color: "#dc3545" }}
-                          onClick={() => handleDeleteClick(row)}
+                          onClick={() => setDeleteDialogOpen(true)}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -497,7 +354,7 @@ const SiteInventory = () => {
         </TableContainer>
       </Paper>
 
-      {/* Modal for creating a new project */}
+      {/* Modal for adding or editing Company Inventory */}
       <Modal
         open={open}
         onClose={handleClose}
@@ -506,115 +363,87 @@ const SiteInventory = () => {
       >
         <Box sx={style}>
           <Typography id="modal-title" variant="h6" component="h2">
-            Create a New Inventory
+            Add Machinery To Site
           </Typography>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-4">
-            <Box className="flex flex-col gap-4">
-              {/* Machinery Name and Type */}
-              <Box className="flex gap-4">
-                <TextField
-                  name="name"
-                  label="Machinery Name"
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
+            className="flex flex-col gap-4 mt-4"
+            onSubmit={handleUpdate}
+          >
+            {editData === null ? (
+              <Select
+                required
+                fullWidth
+                label="Machinery Name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                displayEmpty
+              >
+                <MenuItem value="">Select Machinery</MenuItem>
+                {availableMachinary.map((item, index) => (
+                  <MenuItem
+                    key={index}
+                    value={item.name}
+                    onClick={() => {
+                      setItemToEdit(item._id);
+                    }}
+                  >
+                    {item.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : (
+              <TextField
+                fullWidth
+                disabled
+                label="Machinery Name"
+                name="name"
+                value={formData.name}
+              />
+            )}
+            {editData === null ? (
+              <Select
+                required
+                fullWidth
+                displayEmpty
+                label="Site"
+                name="site"
+                value={formData.site}
+                onChange={(e) =>
+                  setFormData({ ...formData, site: e.target.value })
+                }
+              >
+                <MenuItem value="">Select Project</MenuItem>
+                {projects.map((project) => (
+                  <MenuItem key={project._id} value={project._id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : (
+              <>
+                <InputLabel id="site">
+                  Do you want to remove from site?
+                </InputLabel>
+                <Select
+                  labelId="site"
+                  id="site"
                   fullWidth
-                  onChange={handleInputChange}
-                  required
-                />
-                <TextField
-                  name="type"
-                  label="Type"
-                  fullWidth
-                  onChange={handleInputChange}
-                  required
-                />
-              </Box>
-
-              {/* Working and Tracking Number */}
-              <Box className="flex gap-4">
-                <TextField
-                  select
-                  name="working"
-                  label="Working"
-                  fullWidth
-                  value={formData.working}
-                  onChange={handleInputChange}
-                  required
+                  value={formData.site}
+                  onChange={(e) =>
+                    setFormData({ ...formData, site: e.target.value })
+                  }
                 >
-                  <MenuItem value="">Select Working</MenuItem>
-                  <MenuItem value="Yes">Yes</MenuItem>
-                  <MenuItem value="No">No</MenuItem>
-                </TextField>
-                <TextField
-                  name="trackingNumber"
-                  label="Tracking Number"
-                  fullWidth
-                  onChange={handleInputChange}
-                  required
-                />
-              </Box>
-              {/* Part Demand and Demand Part Type */}
-              {formData.partsDemandType.map((partType, index) => (
-                <Box className="flex gap-4" key={index}>
-                  <TextField
-                    name={`partDemandType-${index}`}
-                    label={`Demand Part Type ${index + 1}`}
-                    fullWidth
-                    value={partType.partDemandType}
-                    onChange={(event) =>
-                      handleDemandPartTypeChange(
-                        index,
-                        "partDemandType",
-                        event.target.value
-                      )
-                    }
-                    required
-                  />
-                  <TextField
-                    select
-                    name={`status-${index}`}
-                    label="Status"
-                    fullWidth
-                    value={partType.status}
-                    onChange={(event) =>
-                      handleDemandPartTypeChange(
-                        index,
-                        "status",
-                        event.target.value
-                      )
-                    }
-                    required
-                  >
-                    <MenuItem value="in-progress">In Progress</MenuItem>
-                    <MenuItem value="in-transport">In Transport</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                  </TextField>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => handleRemoveDemandPartType(index)}
-                    disabled={formData.partsDemandType.length === 1} // Disable remove if only 1 field
-                  >
-                    Remove
-                  </Button>
-                </Box>
-              ))}
-              <Button variant="outlined" onClick={handleAddDemandPartType}>
-                + Add Another Part Demand Type
-              </Button>
+                  <MenuItem value="yes">Yes</MenuItem>
+                  <MenuItem value="no">No</MenuItem>
+                </Select>
+              </>
+            )}
 
-              {/* Status and Document Upload */}
-              <Box className="flex gap-4">
-                <TextField
-                  name="document"
-                  type="file"
-                  fullWidth
-                  onChange={handleInputChange}
-                  required
-                />
-              </Box>
-            </Box>
-
-            {/* Buttons */}
-            <Box className="flex justify-end mt-4">
+            <div className="flex justify-end mt-4">
               <Button onClick={handleClose} color="error">
                 Cancel
               </Button>
@@ -622,159 +451,74 @@ const SiteInventory = () => {
                 type="submit"
                 variant="contained"
                 className="!bg-[#FC8908]"
-                disabled={loading}
               >
-                {loading ? <CircularProgress size={24} /> : "Submit"}
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : editData ? (
+                  "Update"
+                ) : (
+                  "Add Inventory"
+                )}
               </Button>
-            </Box>
-          </form>
+            </div>
+          </Box>
         </Box>
       </Modal>
 
-      {/* Modal for editing an inventory item */}
+      {/* Modal for adding parts */}
+
       <Modal
-        open={openEditModal}
-        onClose={() => setOpenEditModal(false)}
-        aria-labelledby="edit-modal-title"
-        aria-describedby="edit-modal-description"
+        open={partOpen}
+        onClose={handlePartClose}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
       >
         <Box sx={style}>
-          <Typography id="edit-modal-title" variant="h6" component="h2">
-            Edit Inventory
+          <Typography id="modal-title" variant="h6" component="h2">
+            Add Part Demand
           </Typography>
-          <form
-            onSubmit={handleEditSubmit}
+          <Box
+            component="form"
+            noValidate
+            autoComplete="off"
             className="flex flex-col gap-4 mt-4"
+            onSubmit={handlePartSubmit}
           >
-            <Box className="flex flex-col gap-4">
-              {/* Machinery Name and Type */}
-              <Box className="flex gap-4">
-                <TextField
-                  name="name"
-                  label="Machinery Name"
-                  fullWidth
-                  value={editFormData.name}
-                  onChange={handleEditInputChange}
-                  required
-                />
-                <TextField
-                  name="type"
-                  label="Type"
-                  fullWidth
-                  value={editFormData.type}
-                  onChange={handleEditInputChange}
-                  required
-                />
-              </Box>
-
-              {/* Working and Tracking Number */}
-              <Box className="flex gap-4">
-                <TextField
-                  select
-                  name="working"
-                  label="Working"
-                  fullWidth
-                  value={editFormData.working}
-                  onChange={handleEditInputChange}
-                  required
+            <Select
+              required
+              fullWidth
+              label="Machinery Name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              displayEmpty
+            >
+              <MenuItem value="">Select Machinery</MenuItem>
+              {data.map((item, index) => (
+                <MenuItem
+                  key={index}
+                  value={item.name}
+                  onClick={() => {
+                    console.log("Clicked item:", item, item._id);
+                    setItemToEdit(item._id);
+                  }}
                 >
-                  <MenuItem value="">Select Working</MenuItem>
-                  <MenuItem value="Yes">Yes</MenuItem>
-                  <MenuItem value="No">No</MenuItem>
-                </TextField>
-                <TextField
-                  name="trackingNumber"
-                  label="Tracking Number"
-                  fullWidth
-                  value={editFormData.trackingNumber}
-                  onChange={handleEditInputChange}
-                  required
-                />
-              </Box>
-
-              {editFormData.working === "Yes" && (
-                <Box className="flex gap-4">
-                  <TextField
-                    select
-                    name="workingOn"
-                    label="Working On"
-                    fullWidth
-                    value={editFormData.workingOn}
-                    onChange={handleEditInputChange}
-                    required
-                  >
-                    <MenuItem value="">Select Working</MenuItem>
-                    {sites.map((item) => {
-                      return <MenuItem value={item._id}>{item.name}</MenuItem>;
-                    })}
-                  </TextField>
-                </Box>
-              )}
-
-              {/* Part Demand and Demand Part Type */}
-              {editFormData.partsDemandType.map((partType, index) => (
-                <Box className="flex gap-4" key={index}>
-                  <TextField
-                    name={`partDemandType-${index}`}
-                    label={`Demand Part Type ${index + 1}`}
-                    fullWidth
-                    value={partType.partDemandType}
-                    onChange={(event) =>
-                      handleEditDemandPartTypeChange(
-                        index,
-                        "partDemandType",
-                        event.target.value
-                      )
-                    }
-                    required
-                  />
-                  <TextField
-                    select
-                    name={`status-${index}`}
-                    label="Status"
-                    fullWidth
-                    value={partType.status}
-                    onChange={(event) =>
-                      handleEditDemandPartTypeChange(
-                        index,
-                        "status",
-                        event.target.value
-                      )
-                    }
-                    required
-                  >
-                    <MenuItem value="in-progress">In Progress</MenuItem>
-                    <MenuItem value="in-transport">In Transport</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                  </TextField>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => handleEditRemoveDemandPartType(index)}
-                    disabled={editFormData.partsDemandType.length === 1} // Disable remove if only 1 field
-                  >
-                    Remove
-                  </Button>
-                </Box>
+                  {item.name}
+                </MenuItem>
               ))}
-              <Button variant="outlined" onClick={handleEditAddDemandPartType}>
-                + Add Another Part Demand Type
-              </Button>
+            </Select>
 
-              {/* Status and Document Upload */}
-              <Box className="flex gap-4">
-                <TextField
-                  name="document"
-                  type="file"
-                  fullWidth
-                  onChange={handleEditInputChange}
-                />
-              </Box>
-            </Box>
+            <TextField
+              required
+              name="partDemandType"
+              label="Part Demand"
+              fullWidth
+              value={formData.partDemandType}
+              onChange={handleInputChange}
+            />
 
-            {/* Buttons */}
-            <Box className="flex justify-end mt-4">
-              <Button onClick={() => setOpenEditModal(false)} color="error">
+            <div className="flex justify-end mt-4">
+              <Button onClick={handlePartClose} color="error">
                 Cancel
               </Button>
               <Button
@@ -783,33 +527,32 @@ const SiteInventory = () => {
                 className="!bg-[#FC8908]"
                 disabled={editing}
               >
-                {editing ? <CircularProgress size={24} /> : "Update"}
+                {editing ? <CircularProgress size={24} /> : "Add Demand"}
               </Button>
-            </Box>
-          </form>
+            </div>
+          </Box>
         </Box>
       </Modal>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
-        open={openDeleteDialog}
-        onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
       >
-        <DialogTitle id="delete-dialog-title">Confirm Delete</DialogTitle>
+        <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
-          <DialogContentText id="delete-dialog-description">
+          <DialogContentText>
             Are you sure you want to delete this inventory item?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
+          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
             Cancel
           </Button>
           <Button
-            onClick={handleConfirmDelete}
+            onClick={() => handleDelete(editData?._id)}
             color="error"
+            autoFocus
             disabled={deleting}
           >
             {deleting ? <CircularProgress size={24} /> : "Delete"}

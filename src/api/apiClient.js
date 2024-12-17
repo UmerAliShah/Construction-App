@@ -1,15 +1,14 @@
-import axios from 'axios';
+import { create } from "apisauce";
 
 const baseURL = process.env.REACT_APP_BASE_URL_RADC;
-const apiClient = axios.create({
+const apiClient = create({
   baseURL: baseURL,
 });
-
 const authToken = localStorage.getItem(process.env.REACT_APP_TOKEN_KEY_RADC);
-if (authToken) apiClient.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+if (authToken) apiClient.setHeader("authorization", `Bearer ${authToken}`);
 
 function setAuthToken(token) {
-  apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  apiClient.setHeader("authorization", `Bearer ${token}`);
 }
 
 export { setAuthToken };
